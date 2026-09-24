@@ -13,7 +13,7 @@ enum AppConfig {
         guard let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines),
               value.hasPrefix("http"),
               !value.contains("$("),
-              URL(string: value) != nil
+              let host = URL(string: value)?.host, !host.isEmpty
         else { return fallbackConvexURL }
         return value
     }
