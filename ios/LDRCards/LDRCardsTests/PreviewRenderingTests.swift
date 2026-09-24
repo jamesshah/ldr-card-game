@@ -90,9 +90,21 @@ final class PreviewRenderingTests: XCTestCase {
         ]
     }
 
+    private var deviceScenarios: [(String, AnyView, CGSize)] {
+        [
+            ("Hand · SE", AnyView(HandView().previewEnvironment()), Self.se),
+            ("Hand · Pro", AnyView(HandView().previewEnvironment()), Self.pro),
+            ("Hand · Pro Max", AnyView(HandView().previewEnvironment()), Self.proMax),
+            ("Hand · Pro Max · dark", AnyView(HandView().previewEnvironment().preferredColorScheme(.dark)), Self.proMax),
+            ("Hand · grayscale", AnyView(HandView().previewEnvironment().grayscale(1)), Self.pro),
+            ("Inbox · SE", AnyView(InboxView().previewEnvironment()), Self.se),
+            ("Timeline · Pro Max · dark", AnyView(TimelineScreen().previewEnvironment().preferredColorScheme(.dark)), Self.proMax),
+        ]
+    }
+
     func testEveryPreviewRenders() throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
-        let all = signInScenarios + scenarios.map { ($0.0, $0.1, Self.pro) }
+        let all = signInScenarios + deviceScenarios + scenarios.map { ($0.0, $0.1, Self.pro) }
         for (name, view, size) in all {
             let window = UIWindow(windowScene: scene)
             window.frame = CGRect(origin: .zero, size: size)

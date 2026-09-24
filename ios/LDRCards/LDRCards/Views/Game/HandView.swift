@@ -94,8 +94,10 @@ struct HandView: View {
                     } label: {
                         Label("Play on \(store.partnerName)", systemImage: "paperplane.fill")
                             .frame(maxWidth: .infinity)
+                            .foregroundStyle(.white)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(Theme.brand)
                     .controlSize(.large)
                     .padding(.horizontal, 28)
                     .disabled(store.couple?.status != .active)
@@ -242,6 +244,26 @@ struct CustomCardSheet: View {
     HandView()
         .previewEnvironment()
         .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · SE", traits: .fixedLayout(width: 375, height: 667)) {
+    HandView().previewEnvironment()
+}
+
+#Preview("Hand · Pro Max", traits: .fixedLayout(width: 440, height: 956)) {
+    HandView().previewEnvironment()
+}
+
+#Preview("Hand · Pro Max · dark", traits: .fixedLayout(width: 440, height: 956)) {
+    HandView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · grayscale") {
+    HandView()
+        .previewEnvironment()
+        .grayscale(1)
 }
 
 #Preview("Hand · empty") {
