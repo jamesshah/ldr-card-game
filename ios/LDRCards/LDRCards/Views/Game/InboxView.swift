@@ -157,22 +157,25 @@ private struct IncomingRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                HStack(spacing: 8) {
+                VStack(spacing: 8) {
                     Button(action: onComplete) {
                         Label("Complete", systemImage: "checkmark").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    Button(action: onCounter) {
-                        Label("Counter", systemImage: "shield.lefthalf.filled")
+                    HStack(spacing: 8) {
+                        Button(action: onCounter) {
+                            Label("Counter", systemImage: "shield.lefthalf.filled").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!hasCounter)
+                        Button(role: .destructive, action: onRefuse) {
+                            Label("Refuse", systemImage: "hand.raised.fill").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(!hasCounter)
-                    Button(role: .destructive, action: onRefuse) {
-                        Label("Refuse", systemImage: "hand.raised.fill")
-                    }
-                    .buttonStyle(.bordered)
                 }
                 .labelStyle(.titleAndIcon)
+                .lineLimit(1)
                 .font(.subheadline.weight(.semibold))
             }
         }
