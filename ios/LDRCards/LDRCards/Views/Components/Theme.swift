@@ -1,28 +1,32 @@
 import SwiftUI
 
 enum Theme {
-    static let rose = Color(red: 0.91, green: 0.29, blue: 0.38)
-    static let plum = Color(red: 0.36, green: 0.16, blue: 0.45)
-    static let night = Color(red: 0.12, green: 0.10, blue: 0.22)
+    /// One brand accent, warm neutral surfaces, and semantic colors used only for state.
+    static let brand = Color(red: 0.79, green: 0.31, blue: 0.39)
+    static let rose = brand
+    static let canvas = adaptive(light: 0xF7F5F4, dark: 0x121011)
+    static let surface = adaptive(light: 0xFFFFFF, dark: 0x1B1819)
+    static let secondarySurface = adaptive(light: 0xF0ECEA, dark: 0x252123)
+    static let cardSurface = adaptive(light: 0xFCF8F7, dark: 0x201B1D)
+    static let primaryText = adaptive(light: 0x211D1E, dark: 0xF8F4F3)
+    static let secondaryText = adaptive(light: 0x71696C, dark: 0xB7AFB1)
+    static let hairline = adaptive(light: 0xDED7D5, dark: 0x383235)
+    static let brandTint = adaptive(light: 0xF5E4E7, dark: 0x3A2026)
+    static let success = adaptive(light: 0x2F7D5B, dark: 0x61B58C)
+    static let warning = adaptive(light: 0x9A6A1D, dark: 0xD2A451)
+    static let destructive = adaptive(light: 0xB8404D, dark: 0xE0717C)
+    static let mutedStatus = adaptive(light: 0x777174, dark: 0xA7A0A2)
+    static let counterSurface = adaptive(light: 0x292729, dark: 0x242123)
 
-    static func gradient(for category: String, kind: CardKind) -> LinearGradient {
-        let colors: [Color]
-        if kind == .counter {
-            colors = [Color(red: 0.20, green: 0.22, blue: 0.30), Color(red: 0.08, green: 0.09, blue: 0.14)]
-        } else {
-            switch category {
-            case "Calls": colors = [Color(red: 0.98, green: 0.45, blue: 0.40), Color(red: 0.85, green: 0.22, blue: 0.40)]
-            case "Voice & Video": colors = [Color(red: 0.55, green: 0.36, blue: 0.96), Color(red: 0.36, green: 0.18, blue: 0.70)]
-            case "Photos": colors = [Color(red: 0.99, green: 0.66, blue: 0.30), Color(red: 0.93, green: 0.40, blue: 0.25)]
-            case "Deliveries": colors = [Color(red: 0.20, green: 0.70, blue: 0.62), Color(red: 0.10, green: 0.45, blue: 0.50)]
-            case "Together Apart": colors = [Color(red: 0.25, green: 0.52, blue: 0.95), Color(red: 0.20, green: 0.25, blue: 0.70)]
-            case "Sweet": colors = [Color(red: 0.98, green: 0.52, blue: 0.70), Color(red: 0.86, green: 0.30, blue: 0.55)]
-            case "Playful": colors = [Color(red: 0.95, green: 0.75, blue: 0.20), Color(red: 0.90, green: 0.45, blue: 0.15)]
-            case "Custom": colors = [Theme.plum, Theme.night]
-            default: colors = [Theme.rose, Theme.plum]
-            }
+    static func statusColor(_ state: PlayState, delivered: Bool = true) -> Color {
+        if !delivered { return warning }
+        switch state {
+        case .completed: return success
+        case .refused: return destructive
+        case .countered: return mutedStatus
+        case .proofSubmitted: return brand
+        case .pending: return warning
         }
-        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
     static func symbol(for category: String, kind: CardKind) -> String {
@@ -38,6 +42,36 @@ enum Theme {
         case "Custom": return "pencil.and.scribble"
         default: return "suit.heart.fill"
         }
+    }
+
+    private static func adaptive(light: UInt32, dark: UInt32) -> Color {
+        Color(uiColor: UIColor { traits in
+            UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+        })
+    }
+}
+
+private extension UIColor {
+    convenience init(rgb: UInt32) {
+        self.init(
+            red: CGFloat((rgb >> 16) & 0xFF) / 255,
+            green: CGFloat((rgb >> 8) & 0xFF) / 255,
+            blue: CGFloat(rgb & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+}
+
+private struct CalmSurface: ViewModifier {
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(Theme.hairline, lineWidth: 0.75)
+            }
     }
 }
 
@@ -55,6 +89,10 @@ struct ErrorAlert: ViewModifier {
 }
 
 extension View {
+    func calmSurface(radius: CGFloat = 20) -> some View {
+        modifier(CalmSurface(radius: radius))
+    }
+
     func errorAlert(_ message: Binding<String?>) -> some View {
         modifier(ErrorAlert(message: message))
     }

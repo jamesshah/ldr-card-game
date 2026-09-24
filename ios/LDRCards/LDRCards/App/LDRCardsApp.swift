@@ -9,7 +9,7 @@ struct LDRCardsApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(session)
-                .tint(Theme.rose)
+                .tint(Theme.brand)
         }
     }
 }

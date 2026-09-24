@@ -14,34 +14,51 @@ struct CardFace: View {
                 Label(kind == .counter ? "Counter" : category, systemImage: Theme.symbol(for: category, kind: kind))
                     .font(compact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
                     .textCase(.uppercase)
-                    .opacity(0.9)
+                    .foregroundStyle(kind == .counter ? .white : Theme.brand)
+                    .padding(.horizontal, compact ? 9 : 11)
+                    .padding(.vertical, compact ? 5 : 6)
+                    .background(
+                        kind == .counter ? Color.white.opacity(0.12) : Theme.brandTint,
+                        in: Capsule()
+                    )
                 Spacer()
             }
             if !compact { Spacer(minLength: 0) }
             Text(title)
                 .font(compact ? .headline : .system(.largeTitle, design: .rounded).weight(.bold))
+                .foregroundStyle(kind == .counter ? .white : Theme.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
                 .minimumScaleFactor(0.7)
             if !bodyText.isEmpty {
                 Text(bodyText)
                     .font(compact ? .subheadline : .title3)
-                    .opacity(0.92)
+                    .foregroundStyle(kind == .counter ? Color.white.opacity(0.78) : Theme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !compact { Spacer(minLength: 0) }
             if let footnote {
                 Text(footnote)
                     .font(.footnote.weight(.medium))
+                    .foregroundStyle(kind == .counter ? .white : Theme.primaryText)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(.white.opacity(0.2), in: Capsule())
+                    .background(
+                        kind == .counter ? Color.white.opacity(0.12) : Theme.secondarySurface,
+                        in: Capsule()
+                    )
             }
         }
-        .foregroundStyle(.white)
         .padding(compact ? 16 : 24)
         .frame(maxWidth: .infinity, maxHeight: compact ? nil : .infinity, alignment: .leading)
-        .background(Theme.gradient(for: category, kind: kind), in: RoundedRectangle(cornerRadius: compact ? 18 : 28, style: .continuous))
-        .shadow(color: .black.opacity(compact ? 0.08 : 0.18), radius: compact ? 6 : 16, y: compact ? 3 : 8)
+        .background(
+            kind == .counter ? Theme.counterSurface : Theme.cardSurface,
+            in: RoundedRectangle(cornerRadius: compact ? 18 : 28, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: compact ? 18 : 28, style: .continuous)
+                .strokeBorder(kind == .counter ? Color.white.opacity(0.08) : Theme.hairline, lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(compact ? 0.04 : 0.08), radius: compact ? 4 : 10, y: compact ? 2 : 5)
         .accessibilityElement(children: .combine)
     }
 }
@@ -74,14 +91,14 @@ struct TimeZonesBar: View {
                 if let partner {
                     Image(systemName: "heart.fill")
                         .font(.caption)
-                        .foregroundStyle(Theme.rose)
+                        .foregroundStyle(Theme.brand)
                     clock(label: partner.name, player: partner, now: context.date)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .calmSurface(radius: 16)
         }
     }
 
@@ -94,7 +111,7 @@ struct TimeZonesBar: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             HStack(spacing: 4) {
-                if quiet { Image(systemName: "moon.zzz.fill").foregroundStyle(.indigo) }
+                if quiet { Image(systemName: "moon.zzz.fill").foregroundStyle(Theme.warning) }
                 Text(GameFormatting.clockTime(now, timeZone: zone))
                     .font(.headline.monospacedDigit())
             }
