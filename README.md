@@ -120,6 +120,19 @@ The `$()` keeps xcconfig from treating `//` as a comment. The Simulator can reac
 3. On the first, pick a timeframe and tap **Create invite code**. On the second, enter the code and tap **Join**. Both hands are dealt.
 4. Play a card from the Hand tab, then answer it from the other Simulator's Inbox.
 
+### Two-player smoke test
+
+The `LDRCardsSmoke` scheme runs a UI test that drives one player in the Simulator and the partner through the Convex HTTP API. It covers pairing, playing, sending proof back for another try, accepting, completing with a note, refusing (with the steal), and countering. It needs a local backend (`npx convex dev`, seeded) and the `Local.xcconfig` override above:
+
+```bash
+cd ios/LDRCards
+xcodegen generate
+xcodebuild test -project LDRCards.xcodeproj -scheme LDRCardsSmoke \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
+```
+
+Screenshots of each step are attached to the test result.
+
 ### Sign in with Apple and push notifications
 
 Both need a paid Apple Developer account and a signed build.

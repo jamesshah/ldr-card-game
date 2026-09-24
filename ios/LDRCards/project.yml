@@ -64,3 +64,26 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.ldrcards.tests
     dependencies:
       - target: LDRCards
+
+  LDRCardsSmokeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: LDRCardsSmokeUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.ldrcards.smokeuitests
+        TEST_TARGET_NAME: LDRCards
+    dependencies:
+      - target: LDRCards
+
+schemes:
+  LDRCardsSmoke:
+    build:
+      targets:
+        LDRCards: all
+        LDRCardsSmokeUITests: [test]
+    test:
+      targets:
+        - LDRCardsSmokeUITests
