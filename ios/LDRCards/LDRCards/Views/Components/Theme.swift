@@ -2,7 +2,8 @@ import SwiftUI
 
 enum Theme {
     /// One brand accent, warm neutral surfaces, and semantic colors used only for state.
-    static let brand = Color(red: 0.79, green: 0.31, blue: 0.39)
+    static let brandUIColor = UIColor(red: 0.79, green: 0.31, blue: 0.39, alpha: 1)
+    static let brand = Color(uiColor: brandUIColor)
     static let rose = brand
     static let canvas = adaptive(light: 0xF7F5F4, dark: 0x121011)
     static let surface = adaptive(light: 0xFFFFFF, dark: 0x1B1819)
@@ -27,6 +28,21 @@ enum Theme {
         case .proofSubmitted: return brand
         case .pending: return warning
         }
+    }
+
+    static func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        for item in [
+            appearance.stackedLayoutAppearance,
+            appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance,
+        ] {
+            item.normal.badgeBackgroundColor = brandUIColor
+            item.normal.badgeTextAttributes = [.foregroundColor: UIColor.white]
+        }
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
     static func symbol(for category: String, kind: CardKind) -> String {

@@ -82,7 +82,7 @@ struct PairingView: View {
             } label: {
                 Text("Join").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .disabled(GameFormatting.normalizedInviteCode(inviteCode).count < 6 || store.isWorking)
         }
