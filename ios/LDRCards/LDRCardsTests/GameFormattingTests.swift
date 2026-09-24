@@ -1,3 +1,4 @@
+import AuthenticationServices
 import XCTest
 @testable import LDRCards
 
@@ -87,6 +88,27 @@ final class GameFormattingTests: XCTestCase {
     func testBundledConvexURLIsConfigured() {
         let raw = Bundle.main.object(forInfoDictionaryKey: "CONVEX_URL") as? String
         XCTAssertEqual(raw.map { AppConfig.resolveConvexURL($0) }, raw, "CONVEX_URL build setting should expand to a full URL")
+    }
+
+    func testDevSignInFlagResolution() {
+        XCTAssertTrue(AppConfig.resolveDevSignIn(buildSetting: "YES", launchOverride: nil))
+        XCTAssertFalse(AppConfig.resolveDevSignIn(buildSetting: "NO", launchOverride: nil))
+        XCTAssertFalse(AppConfig.resolveDevSignIn(buildSetting: "$(ENABLE_DEV_SIGNIN)", launchOverride: nil))
+        XCTAssertFalse(AppConfig.resolveDevSignIn(buildSetting: nil, launchOverride: nil))
+        XCTAssertTrue(AppConfig.resolveDevSignIn(buildSetting: "NO", launchOverride: "YES"))
+        XCTAssertFalse(AppConfig.resolveDevSignIn(buildSetting: "YES", launchOverride: "NO"))
+    }
+
+    func testAppleSignInErrorsOnlyExplainSetupWhenItsTheLikelyCause() {
+        XCTAssertNil(SessionStore.appleSignInErrorMessage(for: ASAuthorizationError(.canceled)))
+        XCTAssertTrue(SessionStore.appleSignInErrorMessage(for: ASAuthorizationError(.unknown))?.contains("capability") == true)
+        XCTAssertTrue(SessionStore.appleSignInErrorMessage(for: ASAuthorizationError(.failed))?.contains("capability") == true)
+        XCTAssertTrue(SessionStore.appleSignInErrorMessage(for: ASAuthorizationError(.invalidResponse))?.hasPrefix("Sign in with Apple failed") == true)
+    }
+
+    func testBundledDevSignInFlagIsExpanded() {
+        let raw = Bundle.main.object(forInfoDictionaryKey: "ENABLE_DEV_SIGNIN") as? String
+        XCTAssertTrue(["YES", "NO"].contains(raw ?? ""), "ENABLE_DEV_SIGNIN should expand to YES or NO, got \(raw ?? "nil")")
     }
 
     func testTimeframeLabels() {

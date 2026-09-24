@@ -11,6 +11,7 @@ final class TwoPlayerSmokeTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        app.launchArguments += ["-EnableDevSignIn", "YES"]
         app.launch()
     }
 

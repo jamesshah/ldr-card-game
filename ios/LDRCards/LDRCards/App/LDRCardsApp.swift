@@ -73,4 +73,8 @@ struct SignedInView: View {
 #Preview("Root · signed out") {
     RootView().environmentObject(SessionStore.previewSignedOut())
 }
+
+#Preview("Root · Apple sign-in failed") {
+    RootView().environmentObject(SessionStore.previewAppleSignInFailed())
+}
 #endif

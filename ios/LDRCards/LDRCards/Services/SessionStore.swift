@@ -42,6 +42,7 @@ final class SessionStore: ObservableObject {
         return nil
     }
 
+    #if DEBUG
     func signInDev(name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -56,12 +57,12 @@ final class SessionStore: ObservableObject {
             return token
         }
     }
+    #endif
 
     func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) async {
         switch result {
         case .failure(let error):
-            if (error as? ASAuthorizationError)?.code == .canceled { return }
-            errorMessage = "Sign in with Apple failed: \(error.localizedDescription)"
+            if let message = Self.appleSignInErrorMessage(for: error) { errorMessage = message }
         case .success(let authorization):
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
                   let tokenData = credential.identityToken,
@@ -81,6 +82,19 @@ final class SessionStore: ObservableObject {
                 let token: String = try await client.action("auth:signInWithApple", with: args)
                 return token
             }
+        }
+    }
+
+    /// Nil when the user cancelled. Unsigned builds, or builds without the Sign in with Apple
+    /// capability, fail with `.unknown` or `.failed`, so those get a setup hint.
+    nonisolated static func appleSignInErrorMessage(for error: Error) -> String? {
+        switch (error as? ASAuthorizationError)?.code {
+        case .canceled:
+            return nil
+        case .unknown, .failed, .notHandled:
+            return "Sign in with Apple isn't available in this build. It needs to be signed with the Sign in with Apple capability enabled."
+        default:
+            return "Sign in with Apple failed: \(error.localizedDescription)"
         }
     }
 

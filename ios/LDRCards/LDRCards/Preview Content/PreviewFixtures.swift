@@ -1,4 +1,5 @@
 #if DEBUG
+import AuthenticationServices
 import SwiftUI
 
 /// Sample data for SwiftUI previews and preview snapshot tests. Nothing here talks to Convex.
@@ -220,6 +221,13 @@ extension SessionStore {
 
     static func previewSignedOut(isWorking: Bool = false) -> SessionStore {
         SessionStore(previewState: .signedOut, isWorking: isWorking)
+    }
+
+    /// What an unsigned build shows after tapping Sign in with Apple.
+    static func previewAppleSignInFailed() -> SessionStore {
+        let session = SessionStore(previewState: .signedOut)
+        session.errorMessage = appleSignInErrorMessage(for: ASAuthorizationError(.unknown))
+        return session
     }
 }
 

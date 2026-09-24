@@ -5,39 +5,54 @@ struct SignInView: View {
     @EnvironmentObject private var session: SessionStore
     @State private var devName = ""
     @FocusState private var nameFocused: Bool
+    @Environment(\.colorScheme) private var colorScheme
+    private let showsDevSignIn: Bool
+
+    init(showsDevSignIn: Bool = AppConfig.devSignInEnabled) {
+        self.showsDevSignIn = showsDevSignIn
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 28) {
-                hero
-
-                VStack(spacing: 14) {
-                    SignInWithAppleButton(.signIn) { request in
-                        request.requestedScopes = [.fullName]
-                    } onCompletion: { result in
-                        Task { await session.handleAppleSignIn(result) }
-                    }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                    Text("Sign in with Apple needs a signed build with the capability enabled.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+        GeometryReader { proxy in
+            ScrollView {
+                // Equal spacers center the content when it fits; they collapse and the view scrolls when it doesn't.
+                VStack(spacing: 0) {
+                    Spacer(minLength: 24)
+                    content
+                    Spacer(minLength: 24)
                 }
-
-                devSignIn
+                .padding(.horizontal, 24)
+                .frame(maxWidth: 520)
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height)
             }
-            .padding(24)
-            .frame(maxWidth: 520)
-            .frame(maxWidth: .infinity)
+            .scrollBounceBehavior(.basedOnSize)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(
             LinearGradient(colors: [Theme.rose.opacity(0.18), Color(.systemBackground)], startPoint: .top, endPoint: .center)
                 .ignoresSafeArea()
         )
+    }
+
+    private var content: some View {
+        VStack(spacing: 28) {
+            hero
+
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName]
+            } onCompletion: { result in
+                Task { await session.handleAppleSignIn(result) }
+            }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            // The underlying Apple button keeps its first style, so rebuild it when the scheme changes.
+            .id(colorScheme)
+            .frame(height: 52)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            #if DEBUG
+            if showsDevSignIn { devSignIn }
+            #endif
+        }
     }
 
     private var hero: some View {
@@ -60,7 +75,7 @@ struct SignInView: View {
                             .offset(x: 22)
                     )
             }
-            .padding(.top, 40)
+            .padding(.vertical, 8)
             .accessibilityHidden(true)
 
             Text("LDR Cards")
@@ -72,6 +87,7 @@ struct SignInView: View {
         }
     }
 
+    #if DEBUG
     private var devSignIn: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Quick sign-in for testing", systemImage: "hammer.fill")
@@ -107,19 +123,50 @@ struct SignInView: View {
         nameFocused = false
         Task { await session.signInDev(name: devName) }
     }
+    #endif
 }
 
 #if DEBUG
-#Preview("Sign in") {
-    SignInView().previewEnvironment(session: .previewSignedOut())
+#Preview("Sign in · dev sign-in hidden") {
+    SignInView(showsDevSignIn: false).previewEnvironment(session: .previewSignedOut())
+}
+
+#Preview("Sign in · dev sign-in hidden · dark") {
+    SignInView(showsDevSignIn: false)
+        .previewEnvironment(session: .previewSignedOut())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Sign in · dev sign-in") {
+    SignInView(showsDevSignIn: true).previewEnvironment(session: .previewSignedOut())
+}
+
+#Preview("Sign in · dev sign-in · dark") {
+    SignInView(showsDevSignIn: true)
+        .previewEnvironment(session: .previewSignedOut())
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Sign in · signing in") {
-    SignInView().previewEnvironment(session: .previewSignedOut(isWorking: true))
+    SignInView(showsDevSignIn: true).previewEnvironment(session: .previewSignedOut(isWorking: true))
 }
 
-#Preview("Sign in · dark") {
-    SignInView()
+#Preview("Sign in · SE · hidden", traits: .fixedLayout(width: 375, height: 667)) {
+    SignInView(showsDevSignIn: false).previewEnvironment(session: .previewSignedOut())
+}
+
+#Preview("Sign in · SE · dev sign-in · dark", traits: .fixedLayout(width: 375, height: 667)) {
+    SignInView(showsDevSignIn: true)
+        .previewEnvironment(session: .previewSignedOut())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Sign in · Pro Max · hidden", traits: .fixedLayout(width: 440, height: 956)) {
+    SignInView(showsDevSignIn: false).previewEnvironment(session: .previewSignedOut())
+}
+
+#Preview("Sign in · Pro Max · dev sign-in · dark", traits: .fixedLayout(width: 440, height: 956)) {
+    SignInView(showsDevSignIn: true)
         .previewEnvironment(session: .previewSignedOut())
         .preferredColorScheme(.dark)
 }

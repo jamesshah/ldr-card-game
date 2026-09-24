@@ -11,9 +11,7 @@ final class PreviewRenderingTests: XCTestCase {
         return [
             ("Root · loading", AnyView(RootView().environmentObject(SessionStore(previewState: .loading)))),
             ("Root · signed out", AnyView(RootView().environmentObject(SessionStore.previewSignedOut()))),
-            ("Sign in", AnyView(SignInView().previewEnvironment(session: .previewSignedOut()))),
-            ("Sign in · signing in", AnyView(SignInView().previewEnvironment(session: .previewSignedOut(isWorking: true)))),
-            ("Sign in · dark", AnyView(SignInView().previewEnvironment(session: .previewSignedOut()).preferredColorScheme(.dark))),
+            ("Root · Apple sign-in failed", AnyView(RootView().environmentObject(SessionStore.previewAppleSignInFailed()))),
             ("Pair up", AnyView(PairingView().previewEnvironment(.previewUnpaired()))),
             ("Pair up · dark", AnyView(PairingView().previewEnvironment(.previewUnpaired()).preferredColorScheme(.dark))),
             ("Invite code", AnyView(WaitingForPartnerView(couple: PreviewData.waitingCouple).previewEnvironment(.previewWaiting()))),
@@ -67,11 +65,35 @@ final class PreviewRenderingTests: XCTestCase {
         ]
     }
 
+    private static let pro = CGSize(width: 402, height: 874)
+    private static let se = CGSize(width: 375, height: 667)
+    private static let proMax = CGSize(width: 440, height: 956)
+
+    private var signInScenarios: [(String, AnyView, CGSize)] {
+        let signIn = { (dev: Bool, dark: Bool) in
+            AnyView(SignInView(showsDevSignIn: dev).previewEnvironment(session: .previewSignedOut())
+                .preferredColorScheme(dark ? .dark : .light))
+        }
+        return [
+            ("Sign in · dev sign-in hidden", signIn(false, false), Self.pro),
+            ("Sign in · dev sign-in hidden · dark", signIn(false, true), Self.pro),
+            ("Sign in · dev sign-in", signIn(true, false), Self.pro),
+            ("Sign in · dev sign-in · dark", signIn(true, true), Self.pro),
+            ("Sign in · signing in", AnyView(SignInView(showsDevSignIn: true)
+                .previewEnvironment(session: .previewSignedOut(isWorking: true))), Self.pro),
+            ("Sign in · SE · hidden", signIn(false, false), Self.se),
+            ("Sign in · SE · dev sign-in · dark", signIn(true, true), Self.se),
+            ("Sign in · Pro Max · hidden", signIn(false, false), Self.proMax),
+            ("Sign in · Pro Max · dev sign-in · dark", signIn(true, true), Self.proMax),
+        ]
+    }
+
     func testEveryPreviewRenders() throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
-        for (name, view) in scenarios {
+        let all = signInScenarios + scenarios.map { ($0.0, $0.1, Self.pro) }
+        for (name, view, size) in all {
             let window = UIWindow(windowScene: scene)
-            window.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+            window.frame = CGRect(origin: .zero, size: size)
             window.rootViewController = UIHostingController(rootView: view)
             window.makeKeyAndVisible()
             RunLoop.main.run(until: Date().addingTimeInterval(0.4))

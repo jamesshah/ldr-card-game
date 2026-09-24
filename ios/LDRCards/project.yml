@@ -34,6 +34,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CONVEX_URL: $(CONVEX_URL)
+        ENABLE_DEV_SIGNIN: $(ENABLE_DEV_SIGNIN)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

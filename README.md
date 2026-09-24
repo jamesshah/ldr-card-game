@@ -51,6 +51,7 @@ npm test            # rule tests
 npm run lint
 npx convex dev      # local/dev deployment; watches and pushes functions
 npx convex run seed:run   # load the deck (safe to re-run)
+npx convex env set ALLOW_DEV_SIGNIN true   # allow the name-only test sign-in on this dev deployment
 ```
 
 Use `npx convex dev` for development. `npx convex deploy` is for production only.
@@ -73,7 +74,7 @@ Set these in the Convex dashboard (Settings, then Environment Variables) or with
 | Variable | Purpose |
 | --- | --- |
 | `APPLE_BUNDLE_ID` | Audience for Sign in with Apple tokens. Defaults to `com.jamesshah.ldrcards`. |
-| `DEV_SIGN_IN` | Set to `disabled` to turn off the name-only test sign-in. |
+| `ALLOW_DEV_SIGNIN` | Set to `true` to allow the name-only test sign-in (`auth:signInDev`). Any other value, or leaving it unset, rejects it. Never set it on production. |
 | `APNS_KEY_ID` | Key ID of your APNs auth key (.p8). |
 | `APNS_TEAM_ID` | Your Apple Developer team ID. |
 | `APNS_PRIVATE_KEY` | Contents of the .p8 file. Literal `\n` sequences are accepted. |
@@ -103,6 +104,10 @@ xcodebuild test -project LDRCards.xcodeproj -scheme LDRCards \
 
 Swift Package Manager fetches ConvexMobile on first build.
 
+### Canvas previews
+
+Every screen and its main subviews have `#Preview` blocks that run offline. `GameStore(previewCouple:...)` and `SessionStore(previewState:)` are preview-only initializers that never create a Convex client. The sample data lives in `LDRCards/Preview Content/PreviewFixtures.swift` (`PreviewData`), all behind `#if DEBUG`: a couple in San Francisco and London, a hand covering every card category, and plays in every state. `PreviewRenderingTests` renders the same scenarios in the Simulator during `xcodebuild test` and fails on any that come out blank. Each render is attached to the test result.
+
 ### Pointing at a different backend
 
 `CONVEX_URL` lives in `ios/LDRCards/Config/App.xcconfig`. To override it without touching the repo, create `ios/LDRCards/Config/Local.xcconfig` (gitignored):
@@ -112,6 +117,15 @@ CONVEX_URL = http:/$()/127.0.0.1:3210
 ```
 
 The `$()` keeps xcconfig from treating `//` as a comment. The Simulator can reach a local `npx convex dev` backend at `127.0.0.1`.
+
+### Dev (name-only) sign-in
+
+The **Quick sign-in for testing** panel needs both switches on:
+
+- **App:** the `ENABLE_DEV_SIGNIN` build setting in `Config/App.xcconfig` reaches the app through Info.plist. It defaults to `YES` for Debug and `NO` otherwise. Set `ENABLE_DEV_SIGNIN = NO` in `Local.xcconfig` to hide the panel in Debug, which is what users of a signed build see. A `-EnableDevSignIn YES` or `-EnableDevSignIn NO` launch argument overrides the setting at runtime; the smoke UI test passes `YES`. Release builds compile the panel out under `#if DEBUG`, whatever the setting says.
+- **Backend:** set `ALLOW_DEV_SIGNIN=true` on the deployment (`npx convex env set ALLOW_DEV_SIGNIN true`). To turn it off, run `npx convex env remove ALLOW_DEV_SIGNIN`.
+
+With the panel hidden, Sign in with Apple is the only way in.
 
 ### Trying it with two players
 
