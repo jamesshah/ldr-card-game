@@ -38,6 +38,8 @@ final class PreviewRenderingTests: XCTestCase {
             ("Inbox", AnyView(InboxView().previewEnvironment(paired()))),
             ("Inbox · empty", AnyView(InboxView().previewEnvironment(.previewPaired(inbox: .empty)))),
             ("Inbox · pending proof", AnyView(InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.pendingProofInbox)))),
+            ("Inbox · pending proof · dark", AnyView(InboxView()
+                .previewEnvironment(.previewPaired(inbox: PreviewData.pendingProofInbox)).preferredColorScheme(.dark))),
             ("Inbox · held for quiet hours", AnyView(InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.quietHoursInbox)))),
             ("Inbox · dark", AnyView(InboxView().previewEnvironment(paired()).preferredColorScheme(.dark))),
             ("Counter sheet", AnyView(CounterSheet(play: PreviewData.incomingPending).previewEnvironment(paired()))),

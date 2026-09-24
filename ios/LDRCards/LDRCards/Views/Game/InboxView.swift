@@ -95,10 +95,14 @@ struct InboxView: View {
                                 Button {
                                     rejecting = play
                                 } label: {
-                                    Text("Try again").frame(maxWidth: .infinity)
+                                    Label("Try again", systemImage: "arrow.uturn.backward").frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.bordered)
                             }
+                            // Inside a List row the automatic label style drops the icon.
+                            .labelStyle(.titleAndIcon)
+                            .lineLimit(1)
+                            .font(.subheadline.weight(.semibold))
                             .disabled(store.isWorking)
                         }
                         .padding(.vertical, 6)
@@ -286,6 +290,12 @@ struct ProofView: View {
 
 #Preview("Inbox · pending proof") {
     InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.pendingProofInbox))
+}
+
+#Preview("Inbox · pending proof · dark") {
+    InboxView()
+        .previewEnvironment(.previewPaired(inbox: PreviewData.pendingProofInbox))
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Inbox · held for quiet hours") {

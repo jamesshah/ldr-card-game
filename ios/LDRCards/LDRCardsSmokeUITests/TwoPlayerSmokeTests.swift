@@ -63,6 +63,7 @@ final class TwoPlayerSmokeTests: XCTestCase {
         ])
         let accept = app.buttons["Accept"]
         XCTAssertTrue(accept.waitForExistence(timeout: 15))
+        Thread.sleep(forTimeInterval: 5) // let the "sent proof" banner clear before the screenshot
         snapshot("02-inbox-review")
         accept.tap()
         XCTAssertTrue(app.staticTexts["Nothing waiting"].waitForExistence(timeout: 10))
