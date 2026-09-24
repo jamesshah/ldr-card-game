@@ -1,0 +1,31 @@
+{
+  "name": "ldr-cards-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Convex backend for the LDR Couple Card Game",
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy",
+    "seed": "convex run seed:run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p convex",
+    "lint": "eslint convex"
+  },
+  "dependencies": {
+    "convex": "^1.46.0",
+    "convex-helpers": "^0.1.124",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@convex-dev/eslint-plugin": "^5.0.0",
+    "@edge-runtime/vm": "^5.0.0",
+    "@types/node": "^26.6.2",
+    "convex-test": "^0.0.59",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1"
+  }
+}
