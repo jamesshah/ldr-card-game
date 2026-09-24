@@ -6,6 +6,8 @@ node_modules/
 # Xcode / XcodeGen
 ios/LDRCards/LDRCards.xcodeproj/
 ios/LDRCards/build/
+ios/LDRCards/Support/Info.plist
+ios/LDRCards/Config/Local.xcconfig
 DerivedData/
 xcuserdata/
 *.xcuserstate
