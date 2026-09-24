@@ -31,7 +31,7 @@ struct HandView: View {
                 }
             }
             .padding(.vertical, 12)
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Your hand")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -128,7 +128,7 @@ struct PlayCardSheet: View {
                     if waitingOnPartner {
                         Label("\(store.partnerName) still has to answer your last card. You can play again once they respond.", systemImage: "hourglass")
                             .font(.subheadline)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     }
 
                     if let partner = store.partner,
@@ -139,7 +139,7 @@ struct PlayCardSheet: View {
                             systemImage: "moon.zzz.fill"
                         )
                         .font(.subheadline)
-                        .foregroundStyle(.indigo)
+                        .foregroundStyle(Theme.warning)
                     }
 
                     if !stackable.isEmpty {
@@ -161,6 +161,7 @@ struct PlayCardSheet: View {
                 }
                 .padding(20)
             }
+            .background(Theme.canvas)
             .navigationTitle("Play this card?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -211,6 +212,8 @@ struct CustomCardSheet: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.canvas)
             .navigationTitle("Custom card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

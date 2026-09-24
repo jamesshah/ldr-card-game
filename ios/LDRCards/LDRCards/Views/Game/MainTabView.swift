@@ -35,6 +35,7 @@ struct SeasonHeader: View {
                         .foregroundStyle(.secondary)
                 }
                 ProgressView(value: GameFormatting.seasonProgress(startedAt: couple.startedAt, endsAt: couple.endsAt, now: context.date))
+                    .tint(Theme.brand)
             }
         }
     }

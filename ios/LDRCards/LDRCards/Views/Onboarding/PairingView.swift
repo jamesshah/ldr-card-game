@@ -23,7 +23,7 @@ struct PairingView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Pair up")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -56,7 +56,7 @@ struct PairingView: View {
             .disabled(store.isWorking)
         }
         .padding(18)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .calmSurface()
     }
 
     private var joinCard: some View {
@@ -72,7 +72,11 @@ struct PairingView: View {
                 .font(.title2.monospaced().weight(.semibold))
                 .multilineTextAlignment(.center)
                 .padding(12)
-                .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Theme.secondarySurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 0.75)
+                }
             Button {
                 Task { await store.joinCouple(code: inviteCode) }
             } label: {
@@ -83,7 +87,7 @@ struct PairingView: View {
             .disabled(GameFormatting.normalizedInviteCode(inviteCode).count < 6 || store.isWorking)
         }
         .padding(18)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .calmSurface()
     }
 }
 
@@ -126,7 +130,7 @@ struct WaitingForPartnerView: View {
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity)
-                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .calmSurface(radius: 24)
 
                     HStack(spacing: 12) {
                         ProgressView()
@@ -149,7 +153,7 @@ struct WaitingForPartnerView: View {
                 .frame(maxWidth: 560)
                 .frame(maxWidth: .infinity)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Invite sent")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

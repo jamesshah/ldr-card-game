@@ -28,10 +28,7 @@ struct SignInView: View {
             .scrollBounceBehavior(.basedOnSize)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(
-            LinearGradient(colors: [Theme.rose.opacity(0.18), Color(.systemBackground)], startPoint: .top, endPoint: .center)
-                .ignoresSafeArea()
-        )
+        .background(Theme.canvas.ignoresSafeArea())
     }
 
     private var content: some View {
@@ -59,12 +56,12 @@ struct SignInView: View {
         VStack(spacing: 16) {
             ZStack {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Theme.gradient(for: "Sweet", kind: .action))
+                    .fill(Theme.brandTint)
                     .frame(width: 92, height: 124)
                     .rotationEffect(.degrees(-10))
                     .offset(x: -22)
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Theme.gradient(for: "Calls", kind: .action))
+                    .fill(Theme.brand)
                     .frame(width: 92, height: 124)
                     .rotationEffect(.degrees(8))
                     .offset(x: 22)
@@ -116,7 +113,7 @@ struct SignInView: View {
             }
         }
         .padding(16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .calmSurface(radius: 18)
     }
 
     private func signInDev() {

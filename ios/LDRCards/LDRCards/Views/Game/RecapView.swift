@@ -30,7 +30,7 @@ struct RecapView: View {
                     .padding(.top, 80)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle(store.recap?.status == .ended ? "Season recap" : "Season so far")
         }
     }
@@ -39,7 +39,7 @@ struct RecapView: View {
         VStack(spacing: 8) {
             Image(systemName: recap.status == .ended ? "trophy.fill" : "hourglass")
                 .font(.system(size: 44))
-                .foregroundStyle(Theme.rose)
+                .foregroundStyle(Theme.brand)
             if recap.status == .ended {
                 Text("That's a wrap!")
                     .font(.title.weight(.bold))
@@ -55,7 +55,7 @@ struct RecapView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(20)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .calmSurface(radius: 24)
     }
 }
 
@@ -77,17 +77,17 @@ private struct PlayerStatsCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(isMe ? Theme.rose.opacity(0.5) : .clear, lineWidth: 2)
+                .strokeBorder(isMe ? Theme.brand.opacity(0.55) : Theme.hairline, lineWidth: isMe ? 1.5 : 0.75)
         )
     }
 
     private func stat(_ label: String, _ value: Double, _ symbol: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: symbol)
-                .foregroundStyle(Theme.rose)
+                .foregroundStyle(Theme.secondaryText)
                 .frame(width: 20)
             Text(label)
                 .font(.caption)
