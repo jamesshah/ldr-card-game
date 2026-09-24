@@ -64,3 +64,13 @@ struct SignedInView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Root · loading") {
+    RootView().environmentObject(SessionStore(previewState: .loading))
+}
+
+#Preview("Root · signed out") {
+    RootView().environmentObject(SessionStore.previewSignedOut())
+}
+#endif

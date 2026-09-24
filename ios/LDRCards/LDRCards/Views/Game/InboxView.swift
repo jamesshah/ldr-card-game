@@ -274,3 +274,39 @@ struct ProofView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Inbox") {
+    InboxView().previewEnvironment()
+}
+
+#Preview("Inbox · empty") {
+    InboxView().previewEnvironment(.previewPaired(inbox: .empty))
+}
+
+#Preview("Inbox · pending proof") {
+    InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.pendingProofInbox))
+}
+
+#Preview("Inbox · held for quiet hours") {
+    InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.quietHoursInbox))
+}
+
+#Preview("Inbox · dark") {
+    InboxView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Counter sheet") {
+    CounterSheet(play: PreviewData.incomingPending).previewEnvironment()
+}
+
+#Preview("Counter sheet · none left") {
+    CounterSheet(play: PreviewData.incomingPending).previewEnvironment(.previewPaired(hand: PreviewData.emptyHand))
+}
+
+#Preview("Text proof", traits: .sizeThatFitsLayout) {
+    ProofView(play: PreviewData.pendingProofReview).padding()
+}
+#endif

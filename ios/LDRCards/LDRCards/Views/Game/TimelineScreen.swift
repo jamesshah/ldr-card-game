@@ -115,3 +115,19 @@ private struct TimelineRow: View {
         return parts.joined(separator: " · ")
     }
 }
+
+#if DEBUG
+#Preview("Timeline") {
+    TimelineScreen().previewEnvironment()
+}
+
+#Preview("Timeline · empty") {
+    TimelineScreen().previewEnvironment(.previewPaired(timeline: []))
+}
+
+#Preview("Timeline · dark") {
+    TimelineScreen()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+#endif

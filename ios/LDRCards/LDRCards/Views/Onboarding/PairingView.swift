@@ -163,3 +163,25 @@ struct WaitingForPartnerView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Pair up") {
+    PairingView().previewEnvironment(.previewUnpaired())
+}
+
+#Preview("Pair up · dark") {
+    PairingView()
+        .previewEnvironment(.previewUnpaired())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Invite code") {
+    WaitingForPartnerView(couple: PreviewData.waitingCouple).previewEnvironment(.previewWaiting())
+}
+
+#Preview("Invite code · dark") {
+    WaitingForPartnerView(couple: PreviewData.waitingCouple)
+        .previewEnvironment(.previewWaiting())
+        .preferredColorScheme(.dark)
+}
+#endif

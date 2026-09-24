@@ -14,6 +14,11 @@ struct CompleteProofSheet: View {
     @State private var loadingPhoto = false
     @StateObject private var recorder = VoiceRecorder()
 
+    init(play: Play, initialProofType: ProofType = .photo) {
+        self.play = play
+        _proofType = State(initialValue: initialProofType)
+    }
+
     private var trimmedNote: String { note.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     private var canSubmit: Bool {
@@ -172,3 +177,28 @@ struct CompleteProofSheet: View {
         if ok { dismiss() }
     }
 }
+
+#if DEBUG
+#Preview("Proof sheet · photo") {
+    CompleteProofSheet(play: PreviewData.incomingPending).previewEnvironment()
+}
+
+#Preview("Proof sheet · note") {
+    CompleteProofSheet(play: PreviewData.incomingStackedRetry, initialProofType: .text).previewEnvironment()
+}
+
+#Preview("Proof sheet · voice note") {
+    CompleteProofSheet(play: PreviewData.incomingPending, initialProofType: .audio).previewEnvironment()
+}
+
+#Preview("Proof sheet · sending") {
+    CompleteProofSheet(play: PreviewData.incomingPending, initialProofType: .text)
+        .previewEnvironment(GameStore(previewCouple: PreviewData.pairedCouple, isWorking: true))
+}
+
+#Preview("Proof sheet · dark") {
+    CompleteProofSheet(play: PreviewData.incomingPending, initialProofType: .text)
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+#endif

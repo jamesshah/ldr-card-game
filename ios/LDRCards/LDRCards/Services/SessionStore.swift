@@ -15,7 +15,8 @@ final class SessionStore: ObservableObject {
     @Published var errorMessage: String?
     @Published private(set) var isWorking = false
 
-    private let client: ConvexClient
+    /// Nil only for previews, which must never open a connection.
+    private let client: ConvexClient?
     private var meSubscription: AnyCancellable?
 
     init(client: ConvexClient = Backend.client) {
@@ -26,6 +27,15 @@ final class SessionStore: ObservableObject {
             state = .signedOut
         }
     }
+
+    #if DEBUG
+    /// Offline session for SwiftUI previews. Skips the Keychain and never calls the backend.
+    init(previewState: State, isWorking: Bool = false) {
+        client = nil
+        state = previewState
+        self.isWorking = isWorking
+    }
+    #endif
 
     var token: String? {
         if case .signedIn(let token, _) = state { return token }
@@ -40,8 +50,9 @@ final class SessionStore: ObservableObject {
         }
         var args = Backend.deviceTimeArgs
         args["name"] = trimmed
+        guard let client else { return }
         await signIn {
-            let token: String = try await self.client.mutation("auth:signInDev", with: args)
+            let token: String = try await client.mutation("auth:signInDev", with: args)
             return token
         }
     }
@@ -65,15 +76,16 @@ final class SessionStore: ObservableObject {
                 let name = PersonNameComponentsFormatter.localizedString(from: components, style: .default)
                 if !name.isEmpty { args["name"] = name }
             }
+            guard let client else { return }
             await signIn {
-                let token: String = try await self.client.action("auth:signInWithApple", with: args)
+                let token: String = try await client.action("auth:signInWithApple", with: args)
                 return token
             }
         }
     }
 
     func signOut() async {
-        guard let token else { return }
+        guard let token, let client else { return }
         PushRegistration.shared.sessionDidEnd()
         try? await client.mutation("auth:signOut", with: ["sessionToken": token])
         endSession()
@@ -93,7 +105,7 @@ final class SessionStore: ObservableObject {
     }
 
     private func watchSession(token: String) {
-        meSubscription = client
+        meSubscription = client?
             .subscribe(to: "users:me", with: ["sessionToken": token], yielding: Me?.self)
             .receive(on: DispatchQueue.main)
             .sink(

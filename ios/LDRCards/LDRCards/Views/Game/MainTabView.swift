@@ -39,3 +39,17 @@ struct SeasonHeader: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Main tabs") {
+    MainTabView().previewEnvironment()
+}
+
+#Preview("Main tabs · season over") {
+    MainTabView().previewEnvironment(.previewEnded())
+}
+
+#Preview("Season header", traits: .sizeThatFitsLayout) {
+    SeasonHeader(couple: PreviewData.pairedCouple).padding()
+}
+#endif

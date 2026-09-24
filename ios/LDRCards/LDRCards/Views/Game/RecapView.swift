@@ -99,3 +99,23 @@ private struct PlayerStatsCard: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Recap · season so far") {
+    RecapView().previewEnvironment()
+}
+
+#Preview("Recap · season over") {
+    RecapView().previewEnvironment(.previewEnded())
+}
+
+#Preview("Recap · unavailable") {
+    RecapView().previewEnvironment(.previewPaired(recap: nil))
+}
+
+#Preview("Recap · dark") {
+    RecapView()
+        .previewEnvironment(.previewEnded())
+        .preferredColorScheme(.dark)
+}
+#endif

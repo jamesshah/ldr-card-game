@@ -108,3 +108,19 @@ struct SignInView: View {
         Task { await session.signInDev(name: devName) }
     }
 }
+
+#if DEBUG
+#Preview("Sign in") {
+    SignInView().previewEnvironment(session: .previewSignedOut())
+}
+
+#Preview("Sign in · signing in") {
+    SignInView().previewEnvironment(session: .previewSignedOut(isWorking: true))
+}
+
+#Preview("Sign in · dark") {
+    SignInView()
+        .previewEnvironment(session: .previewSignedOut())
+        .preferredColorScheme(.dark)
+}
+#endif

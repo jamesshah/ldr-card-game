@@ -229,3 +229,36 @@ struct CustomCardSheet: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Hand") {
+    HandView().previewEnvironment()
+}
+
+#Preview("Hand · dark") {
+    HandView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · empty") {
+    HandView().previewEnvironment(.previewPaired(hand: PreviewData.emptyHand))
+}
+
+#Preview("Hand · counters only") {
+    HandView().previewEnvironment(.previewPaired(hand: PreviewData.counterOnlyHand))
+}
+
+#Preview("Play sheet · stack option") {
+    PlayCardSheet(card: PreviewData.voiceCard)
+        .previewEnvironment(.previewPaired(inbox: Inbox(incoming: [PreviewData.incomingPending], toReview: [], waitingOnPartner: [])))
+}
+
+#Preview("Play sheet · waiting on partner") {
+    PlayCardSheet(card: PreviewData.movieCard).previewEnvironment()
+}
+
+#Preview("Custom card") {
+    CustomCardSheet().previewEnvironment()
+}
+#endif

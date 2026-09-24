@@ -94,3 +94,15 @@ struct SettingsView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Settings") {
+    SettingsView().previewEnvironment()
+}
+
+#Preview("Settings · dark") {
+    SettingsView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+#endif

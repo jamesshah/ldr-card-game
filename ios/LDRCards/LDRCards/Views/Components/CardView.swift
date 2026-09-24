@@ -104,3 +104,36 @@ struct TimeZonesBar: View {
         .accessibilityLabel("\(label): \(GameFormatting.clockTime(now, timeZone: zone))\(quiet ? ", quiet hours" : "")")
     }
 }
+
+#if DEBUG
+#Preview("Card face") {
+    CardFace(card: PreviewData.callCard)
+        .frame(height: 440)
+        .padding(28)
+}
+
+#Preview("Card faces · every category") {
+    ScrollView {
+        VStack(spacing: 12) {
+            ForEach(PreviewData.fullHand.cards) { CardFace(card: $0, compact: true) }
+        }
+        .padding()
+    }
+}
+
+#Preview("Card face · dark") {
+    CardFace(card: PreviewData.stolenCard)
+        .frame(height: 440)
+        .padding(28)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Time zones · partner in quiet hours", traits: .sizeThatFitsLayout) {
+    TimeZonesBar(
+        me: PreviewData.me,
+        partner: Player(id: "user_theo", name: "Theo", timeZone: "Europe/London", utcOffsetMinutes: 60,
+                        quietStartMinutes: 0, quietEndMinutes: 24 * 60 - 1)
+    )
+    .padding()
+}
+#endif

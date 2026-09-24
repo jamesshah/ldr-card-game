@@ -15,7 +15,8 @@ final class GameStore: ObservableObject {
     @Published private(set) var isWorking = false
 
     let token: String
-    private let client: ConvexClient
+    /// Nil only for previews, which must never open a connection.
+    private let client: ConvexClient?
     private var subscriptions = Set<AnyCancellable>()
 
     init(token: String, client: ConvexClient = Backend.client) {
@@ -23,6 +24,28 @@ final class GameStore: ObservableObject {
         self.client = client
         subscribeAll()
     }
+
+    #if DEBUG
+    /// Offline store for SwiftUI previews: fixed state, no subscriptions, and mutations are no-ops.
+    init(
+        previewCouple couple: Couple?,
+        hand: Hand = .empty,
+        inbox: Inbox = .empty,
+        timeline: [Play] = [],
+        recap: Recap? = nil,
+        isWorking: Bool = false
+    ) {
+        token = "preview"
+        client = nil
+        self.couple = couple
+        coupleLoaded = true
+        self.hand = hand
+        self.inbox = inbox
+        self.timeline = timeline
+        self.recap = recap
+        self.isWorking = isWorking
+    }
+    #endif
 
     var partner: Player? { couple?.partner }
     var partnerName: String { couple?.partner?.name ?? "your partner" }
@@ -44,7 +67,7 @@ final class GameStore: ObservableObject {
     }
 
     private func watch<T: Decodable>(_ name: String, as type: T.Type, onValue: @escaping (T) -> Void) {
-        client
+        client?
             .subscribe(to: name, with: ["sessionToken": token], yielding: type)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -63,6 +86,7 @@ final class GameStore: ObservableObject {
     /// Runs a mutation that returns null, surfacing rule errors to the UI. Returns true on success.
     @discardableResult
     func run(_ name: String, _ args: [String: ConvexEncodable?] = [:]) async -> Bool {
+        guard let client else { return false }
         var fullArgs = args
         fullArgs["sessionToken"] = token
         isWorking = true
@@ -77,6 +101,7 @@ final class GameStore: ObservableObject {
     }
 
     func syncDeviceTime() async {
+        guard let client else { return }
         var args = Backend.deviceTimeArgs
         args["sessionToken"] = token
         try? await client.mutation("users:updateProfile", with: args)
@@ -173,6 +198,7 @@ final class GameStore: ObservableObject {
     // MARK: Uploads
 
     private func uploadFile(data: Data, contentType: String) async throws -> String {
+        guard let client else { throw UploadError.failed }
         let uploadURLString: String = try await client.mutation(
             "plays:generateUploadUrl", with: ["sessionToken": token])
         guard let url = URL(string: uploadURLString) else { throw UploadError.badURL }
