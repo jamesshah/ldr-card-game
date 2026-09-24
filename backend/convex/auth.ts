@@ -28,13 +28,13 @@ async function startSession(ctx: MutationCtx, userId: Id<"users">): Promise<stri
 
 /**
  * Name-only sign-in so two Simulator accounts can pair without an Apple
- * Developer account. Disable in production with `DEV_SIGN_IN=disabled`.
+ * Developer account. Off unless the deployment sets `ALLOW_DEV_SIGNIN=true`.
  */
 export const signInDev = mutation({
   args: { name: v.string(), ...deviceTime },
   returns: v.string(),
   handler: async (ctx, args) => {
-    if (process.env.DEV_SIGN_IN === "disabled") {
+    if (process.env.ALLOW_DEV_SIGNIN !== "true") {
       throw new ConvexError("Dev sign-in is turned off for this deployment.");
     }
     const name = cleanName(args.name);

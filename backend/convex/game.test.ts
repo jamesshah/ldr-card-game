@@ -14,10 +14,12 @@ type T = ReturnType<typeof convexTest>;
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-01-10T12:00:00Z"));
+  vi.stubEnv("ALLOW_DEV_SIGNIN", "true");
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 async function setupCouple(opts: { bobOffset?: number } = {}) {
@@ -95,6 +97,23 @@ describe("deck and pairing", () => {
     const t = convexTest(schema, modules);
     expect(await t.query(api.users.me, { sessionToken: "nope" })).toBeNull();
     await expect(t.query(api.cards.myHand, { sessionToken: "nope" })).rejects.toThrow(/session/);
+  });
+});
+
+describe("dev sign-in", () => {
+  const args = { name: "Casey", timeZone: "UTC", utcOffsetMinutes: 0 };
+
+  test("works when ALLOW_DEV_SIGNIN=true", async () => {
+    const t = convexTest(schema, modules);
+    const token = await t.mutation(api.auth.signInDev, args);
+    expect((await t.query(api.users.me, { sessionToken: token }))?.name).toBe("Casey");
+  });
+
+  test.each([undefined, "false", "1"])("is rejected when ALLOW_DEV_SIGNIN is %s", async (value) => {
+    if (value === undefined) delete process.env.ALLOW_DEV_SIGNIN;
+    else vi.stubEnv("ALLOW_DEV_SIGNIN", value);
+    const t = convexTest(schema, modules);
+    await expect(t.mutation(api.auth.signInDev, args)).rejects.toThrow(/turned off/);
   });
 });
 
