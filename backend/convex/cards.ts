@@ -58,7 +58,16 @@ export const myHand = userQuery({
       .collect();
 
     return {
-      cards: cards.map(({ acquiredAt: _, ...card }) => card),
+      cards: cards.map((card) => ({
+        handId: card.handId,
+        cardId: card.cardId,
+        title: card.title,
+        body: card.body,
+        category: card.category,
+        kind: card.kind,
+        isCustom: card.isCustom,
+        stolenFromName: card.stolenFromName,
+      })),
       usedCount: mine.length - unused.length,
       partnerCardsLeft: hands.filter((h) => h.ownerId !== me._id && h.usedAt === undefined).length,
       customCardsLeftToWrite: Math.max(0, MAX_CUSTOM_CARDS_PER_PLAYER - customWritten.length),
