@@ -1,12 +1,54 @@
 import SwiftUI
 
+enum HandDisplayMode: String, CaseIterable, Identifiable {
+    case cards
+    case list
+
+    var id: String { rawValue }
+    var symbol: String { self == .cards ? "rectangle.stack.fill" : "list.bullet" }
+    var label: String { self == .cards ? "Cards" : "List" }
+}
+
 struct HandView: View {
     @EnvironmentObject private var store: GameStore
     @State private var selection: String?
     @State private var cardToPlay: HandCard?
     @State private var showingCustomCard = false
+    @AppStorage("handDisplayMode") private var displayModeRaw = HandDisplayMode.cards.rawValue
+    @AppStorage("handCategoryFilter") private var savedCategory = "All"
+
+    private let previewDisplayMode: HandDisplayMode?
+    private let previewCategory: String?
+
+    static let allCategories = "All"
+
+    init(previewDisplayMode: HandDisplayMode? = nil, previewCategory: String? = nil) {
+        self.previewDisplayMode = previewDisplayMode
+        self.previewCategory = previewCategory
+    }
 
     private var cards: [HandCard] { store.hand.cards }
+    private var activeCategory: String { previewCategory ?? savedCategory }
+    private var displayMode: HandDisplayMode {
+        previewDisplayMode ?? HandDisplayMode(rawValue: displayModeRaw) ?? .cards
+    }
+    private var filteredCards: [HandCard] {
+        guard activeCategory != Self.allCategories else { return cards }
+        return cards.filter { $0.filterCategory == activeCategory }
+    }
+    private var categories: [String] {
+        Array(Set(cards.map(\.filterCategory))).sorted { lhs, rhs in
+            let trailing = ["Custom", "Counter"]
+            let leftRank = trailing.firstIndex(of: lhs) ?? -1
+            let rightRank = trailing.firstIndex(of: rhs) ?? -1
+            if leftRank >= 0 || rightRank >= 0 {
+                if leftRank < 0 { return true }
+                if rightRank < 0 { return false }
+                return leftRank < rightRank
+            }
+            return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,15 +61,30 @@ struct HandView: View {
                     .padding(.horizontal)
                 }
 
+                if !cards.isEmpty {
+                    browseControls
+                        .padding(.horizontal)
+                }
+
                 if cards.isEmpty {
                     ContentUnavailableView(
                         "Your hand is empty",
                         systemImage: "rectangle.stack.badge.minus",
                         description: Text("You've played every card you had. Write a custom card, or wait for your partner to refuse one so you can steal from them.")
                     )
+                } else if filteredCards.isEmpty {
+                    ContentUnavailableView(
+                        "No \(activeCategory) cards",
+                        systemImage: "line.3.horizontal.decrease.circle",
+                        description: Text("Choose All or another category to see the rest of your hand.")
+                    )
                 } else {
-                    deck
-                    actionArea
+                    if displayMode == .cards {
+                        deck
+                        actionArea
+                    } else {
+                        cardList
+                    }
                 }
             }
             .padding(.vertical, 12)
@@ -48,17 +105,78 @@ struct HandView: View {
                     .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showingCustomCard) { CustomCardSheet() }
-            .onChange(of: cards.map(\.id)) { _, ids in
-                if let selection, ids.contains(selection) { return }
-                selection = ids.first
+            .onChange(of: cards.map(\.id)) { oldIDs, newIDs in
+                let visible = filteredCards.map(\.id)
+                if let newFirst = newIDs.first,
+                   !oldIDs.contains(newFirst),
+                   visible.contains(newFirst) {
+                    selection = newFirst
+                    return
+                }
+                if let selection, visible.contains(selection) { return }
+                selection = visible.first
             }
-            .onAppear { if selection == nil { selection = cards.first?.id } }
+            .onChange(of: activeCategory) { _, _ in selection = filteredCards.first?.id }
+            .onAppear { if selection == nil { selection = filteredCards.first?.id } }
+        }
+    }
+
+    private var browseControls: some View {
+        HStack(spacing: 12) {
+            Picker("Hand layout", selection: Binding(
+                get: { displayMode },
+                set: { displayModeRaw = $0.rawValue }
+            )) {
+                ForEach(HandDisplayMode.allCases) { mode in
+                    Label(mode.label, systemImage: mode.symbol)
+                        .labelStyle(.iconOnly)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 112)
+
+            Menu {
+                Button {
+                    savedCategory = Self.allCategories
+                } label: {
+                    if activeCategory == Self.allCategories {
+                        Label("All", systemImage: "checkmark")
+                    } else {
+                        Text("All")
+                    }
+                }
+                ForEach(categories, id: \.self) { category in
+                    Button {
+                        savedCategory = category
+                    } label: {
+                        if activeCategory == category {
+                            Label(category, systemImage: "checkmark")
+                        } else {
+                            Text(category)
+                        }
+                    }
+                }
+            } label: {
+                Label(
+                    activeCategory,
+                    systemImage: activeCategory == Self.allCategories
+                        ? "line.3.horizontal.decrease.circle"
+                        : "line.3.horizontal.decrease.circle.fill"
+                )
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(activeCategory == Self.allCategories ? Theme.primaryText : Theme.brand)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .calmSurface(radius: 10)
+            }
+            .accessibilityLabel("Card category: \(activeCategory)")
         }
     }
 
     private var deck: some View {
         TabView(selection: $selection) {
-            ForEach(cards) { card in
+            ForEach(filteredCards) { card in
                 CardFace(card: card)
                     .padding(.horizontal, 28)
                     .padding(.bottom, 36)
@@ -70,14 +188,37 @@ struct HandView: View {
         .frame(maxHeight: 460)
     }
 
+    private var cardList: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(filteredCards) { card in
+                    Button {
+                        if card.kind == .action {
+                            cardToPlay = card
+                        } else {
+                            selection = card.id
+                            displayModeRaw = HandDisplayMode.cards.rawValue
+                        }
+                    } label: {
+                        CardFace(card: card, compact: true)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(card.kind == .action ? "Opens the play sheet" : "Opens this counter card")
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+        }
+    }
+
     private var selectedCard: HandCard? {
-        cards.first { $0.id == selection } ?? cards.first
+        filteredCards.first { $0.id == selection } ?? filteredCards.first
     }
 
     private var actionArea: some View {
         VStack(spacing: 8) {
-            if let index = cards.firstIndex(where: { $0.id == selectedCard?.id }) {
-                Text("Card \(index + 1) of \(cards.count) · \(Int(store.hand.partnerCardsLeft)) left in \(store.partnerName)'s hand")
+            if let index = filteredCards.firstIndex(where: { $0.id == selectedCard?.id }) {
+                Text("Card \(index + 1) of \(filteredCards.count) · \(Int(store.hand.partnerCardsLeft)) left in \(store.partnerName)'s hand")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -105,6 +246,10 @@ struct HandView: View {
             }
         }
     }
+}
+
+private extension HandCard {
+    var filterCategory: String { kind == .counter ? "Counter" : category }
 }
 
 struct PlayCardSheet: View {
@@ -242,6 +387,26 @@ struct CustomCardSheet: View {
 
 #Preview("Hand · dark") {
     HandView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · list") {
+    HandView(previewDisplayMode: .list).previewEnvironment()
+}
+
+#Preview("Hand · list · dark") {
+    HandView(previewDisplayMode: .list)
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · filtered Custom") {
+    HandView(previewCategory: "Custom").previewEnvironment()
+}
+
+#Preview("Hand · filtered Custom · dark") {
+    HandView(previewCategory: "Custom")
         .previewEnvironment()
         .preferredColorScheme(.dark)
 }
