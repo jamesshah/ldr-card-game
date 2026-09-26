@@ -123,17 +123,27 @@ struct HandView: View {
 
     private var browseControls: some View {
         HStack(spacing: 12) {
-            Picker("Hand layout", selection: Binding(
-                get: { displayMode },
-                set: { displayModeRaw = $0.rawValue }
-            )) {
+            HStack(spacing: 2) {
                 ForEach(HandDisplayMode.allCases) { mode in
-                    Label(mode.label, systemImage: mode.symbol)
-                        .labelStyle(.iconOnly)
-                        .tag(mode)
+                    Button {
+                        displayModeRaw = mode.rawValue
+                    } label: {
+                        Image(systemName: mode.symbol)
+                            .foregroundStyle(displayMode == mode ? Theme.brand : Theme.secondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(
+                                displayMode == mode ? Theme.brandTint : Color.clear,
+                                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(mode.label)
+                    .accessibilityAddTraits(displayMode == mode ? .isSelected : [])
                 }
             }
-            .pickerStyle(.segmented)
+            .padding(2)
+            .calmSurface(radius: 10)
             .frame(width: 112)
 
             Menu {
