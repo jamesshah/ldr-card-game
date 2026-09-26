@@ -22,6 +22,12 @@ final class PreviewRenderingTests: XCTestCase {
             ("Season header", AnyView(SeasonHeader(couple: PreviewData.pairedCouple).padding())),
             ("Hand", AnyView(HandView().previewEnvironment(paired()))),
             ("Hand · dark", AnyView(HandView().previewEnvironment(paired()).preferredColorScheme(.dark))),
+            ("Hand · list", AnyView(HandView(previewDisplayMode: .list).previewEnvironment(paired()))),
+            ("Hand · list · dark", AnyView(HandView(previewDisplayMode: .list)
+                .previewEnvironment(paired()).preferredColorScheme(.dark))),
+            ("Hand · filtered Custom", AnyView(HandView(previewCategory: "Custom").previewEnvironment(paired()))),
+            ("Hand · filtered Custom · dark", AnyView(HandView(previewCategory: "Custom")
+                .previewEnvironment(paired()).preferredColorScheme(.dark))),
             ("Hand · empty", AnyView(HandView().previewEnvironment(.previewPaired(hand: PreviewData.emptyHand)))),
             ("Hand · counters only", AnyView(HandView().previewEnvironment(.previewPaired(hand: PreviewData.counterOnlyHand)))),
             ("Play sheet · stack option", AnyView(PlayCardSheet(card: PreviewData.voiceCard).previewEnvironment(
