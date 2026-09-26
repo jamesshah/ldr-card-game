@@ -5,20 +5,36 @@ export const MAX_CUSTOM_CARDS_PER_PLAYER = 5;
 export const TIMEFRAME_OPTIONS_DAYS = [7, 30, 90, 180] as const;
 
 export type QuietHours = {
+  timeZone?: string;
   utcOffsetMinutes: number;
   quietStartMinutes?: number;
   quietEndMinutes?: number;
 };
 
-function localMinuteOfDay(nowMs: number, utcOffsetMinutes: number): number {
-  const localMinutes = Math.floor(nowMs / MS_PER_MINUTE) + utcOffsetMinutes;
+function localMinuteOfDay(nowMs: number, q: QuietHours): number {
+  if (q.timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: q.timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).formatToParts(new Date(nowMs));
+      const hour = Number(parts.find((part) => part.type === "hour")?.value);
+      const minute = Number(parts.find((part) => part.type === "minute")?.value);
+      if (Number.isInteger(hour) && Number.isInteger(minute)) return hour * 60 + minute;
+    } catch {
+      // Fall back to the last offset reported by the device if its IANA identifier is invalid.
+    }
+  }
+  const localMinutes = Math.floor(nowMs / MS_PER_MINUTE) + q.utcOffsetMinutes;
   return ((localMinutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
 }
 
 export function isInQuietHours(nowMs: number, q: QuietHours): boolean {
   const { quietStartMinutes: start, quietEndMinutes: end } = q;
   if (start === undefined || end === undefined || start === end) return false;
-  const m = localMinuteOfDay(nowMs, q.utcOffsetMinutes);
+  const m = localMinuteOfDay(nowMs, q);
   return start < end ? m >= start && m < end : m >= start || m < end;
 }
 
@@ -29,7 +45,7 @@ export function isInQuietHours(nowMs: number, q: QuietHours): boolean {
 export function deliveryTime(nowMs: number, q: QuietHours): number {
   if (!isInQuietHours(nowMs, q)) return nowMs;
   const end = q.quietEndMinutes!;
-  const m = localMinuteOfDay(nowMs, q.utcOffsetMinutes);
+  const m = localMinuteOfDay(nowMs, q);
   const minutesUntilEnd = (end - m + MINUTES_PER_DAY) % MINUTES_PER_DAY;
   const startOfMinute = Math.floor(nowMs / MS_PER_MINUTE) * MS_PER_MINUTE;
   return startOfMinute + minutesUntilEnd * MS_PER_MINUTE;

@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var quietStart = GameFormatting.date(fromMinutes: 22 * 60)
     @State private var quietEnd = GameFormatting.date(fromMinutes: 7 * 60)
     @State private var loaded = false
+    @State private var quietSaved = true
     @State private var showingCustomCard = false
 
     private var me: Player? { store.couple?.me }
@@ -35,6 +36,18 @@ struct SettingsView: View {
                         DatePicker("From", selection: $quietStart, displayedComponents: .hourAndMinute)
                         DatePicker("Until", selection: $quietEnd, displayedComponents: .hourAndMinute)
                     }
+                    Button {
+                        Task { await saveQuietHours() }
+                    } label: {
+                        if store.isWorking {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else {
+                            Text(quietSaved ? "Quiet hours saved" : "Save quiet hours")
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(store.isWorking || quietSaved)
                 } footer: {
                     Text("Cards \(store.partnerName) plays during your quiet hours are held and delivered when they end.")
                 }
@@ -65,9 +78,9 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sheet(isPresented: $showingCustomCard) { CustomCardSheet() }
             .onAppear(perform: loadFromProfile)
-            .onChange(of: quietEnabled) { _, _ in saveQuietHours() }
-            .onChange(of: quietStart) { _, _ in saveQuietHours() }
-            .onChange(of: quietEnd) { _, _ in saveQuietHours() }
+            .onChange(of: quietEnabled) { _, _ in if loaded { quietSaved = false } }
+            .onChange(of: quietStart) { _, _ in if loaded { quietSaved = false } }
+            .onChange(of: quietEnd) { _, _ in if loaded { quietSaved = false } }
         }
     }
 
@@ -83,16 +96,14 @@ struct SettingsView: View {
         DispatchQueue.main.async { loaded = true }
     }
 
-    private func saveQuietHours() {
+    private func saveQuietHours() async {
         guard loaded else { return }
         let start = GameFormatting.minutes(from: quietStart)
         let end = GameFormatting.minutes(from: quietEnd)
-        Task {
-            if quietEnabled {
-                await store.setQuietHours(startMinutes: start, endMinutes: end)
-            } else {
-                await store.setQuietHours(startMinutes: nil, endMinutes: nil)
-            }
+        if quietEnabled {
+            quietSaved = await store.setQuietHours(startMinutes: start, endMinutes: end)
+        } else {
+            quietSaved = await store.setQuietHours(startMinutes: nil, endMinutes: nil)
         }
     }
 }

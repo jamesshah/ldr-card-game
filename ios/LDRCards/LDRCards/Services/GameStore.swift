@@ -180,13 +180,14 @@ final class GameStore: ObservableObject {
 
     // MARK: Settings
 
-    func setQuietHours(startMinutes: Int?, endMinutes: Int?) async {
+    @discardableResult
+    func setQuietHours(startMinutes: Int?, endMinutes: Int?) async -> Bool {
         var args: [String: ConvexEncodable?] = ["startMinutes": nil, "endMinutes": nil]
         if let startMinutes, let endMinutes {
             args["startMinutes"] = Double(startMinutes)
             args["endMinutes"] = Double(endMinutes)
         }
-        await run("users:setQuietHours", args)
+        return await run("users:setQuietHours", args)
     }
 
     func rename(to name: String) async {
