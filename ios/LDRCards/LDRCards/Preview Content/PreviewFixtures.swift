@@ -97,7 +97,7 @@ enum PreviewData {
     static let counterCard = card("counter", "Rain check, forever", "Knock a card played on you out of the game.", "Counter", kind: .counter)
 
     static let fullHand = Hand(
-        cards: [callCard, voiceCard, viewCard, deliveryCard, movieCard, stolenCard, customCard, counterCard],
+        cards: [customCard, callCard, voiceCard, viewCard, deliveryCard, movieCard, stolenCard, counterCard],
         usedCount: 6,
         partnerCardsLeft: 24,
         customCardsLeftToWrite: 4
