@@ -5,6 +5,7 @@ import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { deliveryTime, isInQuietHours } from "./lib/rules";
 import schema from "./schema";
+import { apnsConfigured } from "./lib/apnsConfig";
 import { SEED_CARDS } from "./seedData";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -259,6 +260,14 @@ describe("rules", () => {
     expect(bobStats.refused).toBe(1);
   });
 
+  test("recap puts the partner left and signed-in player right for both players", async () => {
+    const { t, alice, bob } = await setupCouple();
+    const asAlice = await t.query(api.couples.recap, { sessionToken: alice });
+    const asBob = await t.query(api.couples.recap, { sessionToken: bob });
+    expect(asAlice!.players.map((p) => p.name)).toEqual(["Bob", "Alice"]);
+    expect(asBob!.players.map((p) => p.name)).toEqual(["Alice", "Bob"]);
+  });
+
   test("proof must be attached and accepted by the sender", async () => {
     const { t, alice, bob } = await setupCouple();
     await play(t, alice, await actionCard(t, alice));
@@ -349,6 +358,7 @@ describe("rules", () => {
     const delivered = await incoming(t, bob);
     expect(delivered).toHaveLength(1);
     expect(delivered[0]!.delivered).toBe(true);
+    expect(await t.query(api.plays.timeline, { sessionToken: bob })).toHaveLength(1);
   });
 
   test("the target can't respond to a card that hasn't been delivered", async () => {
@@ -405,5 +415,39 @@ describe("quiet hours math", () => {
     const now = Date.parse("2026-03-01T06:00:00Z");
     expect(deliveryTime(now, q)).toBe(now);
     expect(deliveryTime(now, { utcOffsetMinutes: 0 })).toBe(now);
+  });
+
+  test("uses the IANA timezone instead of a stale device offset", () => {
+    const losAngeles = {
+      timeZone: "America/Los_Angeles",
+      utcOffsetMinutes: 0, // deliberately stale/wrong
+      quietStartMinutes: 22 * 60,
+      quietEndMinutes: 7 * 60,
+    };
+    // July 1 06:30 UTC = June 30 23:30 PDT.
+    const now = Date.parse("2026-07-01T06:30:00Z");
+    expect(isInQuietHours(now, losAngeles)).toBe(true);
+    expect(deliveryTime(now, losAngeles)).toBe(Date.parse("2026-07-01T14:00:00Z"));
+  });
+
+  test("the end minute is released, not held for another day", () => {
+    const overnight = { utcOffsetMinutes: -300, quietStartMinutes: 22 * 60, quietEndMinutes: 7 * 60 };
+    const oneMinuteBefore = Date.parse("2026-01-11T11:59:00Z");
+    const exactlyAtEnd = Date.parse("2026-01-11T12:00:00Z");
+    expect(isInQuietHours(oneMinuteBefore, overnight)).toBe(true);
+    expect(deliveryTime(oneMinuteBefore, overnight)).toBe(exactlyAtEnd);
+    expect(isInQuietHours(exactlyAtEnd, overnight)).toBe(false);
+    expect(deliveryTime(exactlyAtEnd, overnight)).toBe(exactlyAtEnd);
+  });
+});
+
+describe("APNs configuration", () => {
+  test("requires all four provider values", () => {
+    vi.stubEnv("APNS_KEY_ID", "KEY123");
+    vi.stubEnv("APNS_TEAM_ID", "TEAM123");
+    vi.stubEnv("APNS_PRIVATE_KEY", "PRIVATE KEY");
+    expect(apnsConfigured()).toBe(false);
+    vi.stubEnv("APNS_TOPIC", "com.jamesshah.ldrcards");
+    expect(apnsConfigured()).toBe(true);
   });
 });
