@@ -8,8 +8,9 @@ final class PushRegistration {
 
     private(set) var deviceToken: String?
     private var sessionToken: String?
+    private(set) var backendCanPush = false
 
-    var isRegisteredWithAPNs: Bool { deviceToken != nil }
+    var isRemotePushReady: Bool { deviceToken != nil && backendCanPush }
 
     private var environment: String {
         #if DEBUG
@@ -43,17 +44,23 @@ final class PushRegistration {
             Task { try? await Backend.client.mutation("devices:unregister", with: args) }
         }
         sessionToken = nil
+        backendCanPush = false
         NotificationService.shared.reset()
     }
 
     private func registerIfReady() async {
         guard let deviceToken, let sessionToken else { return }
         do {
-            try await Backend.client.mutation(
+            let configured: Bool = try await Backend.client.mutation(
                 "devices:register",
                 with: ["sessionToken": sessionToken, "apnsToken": deviceToken, "environment": environment]
             )
+            backendCanPush = configured
+            if !configured {
+                print("Device token saved, but APNs provider credentials are not configured; using foreground fallback.")
+            }
         } catch {
+            backendCanPush = false
             print("Couldn't register device for push: \(Backend.message(for: error))")
         }
     }

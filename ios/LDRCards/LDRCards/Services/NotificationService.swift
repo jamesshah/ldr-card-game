@@ -25,7 +25,9 @@ final class NotificationService {
         defer { seenKeys = (seenKeys ?? []).union(keys) }
         // The first snapshot after launch is existing state, not news.
         guard let seen = seenKeys else { return }
-        guard !PushRegistration.shared.isRegisteredWithAPNs else { return }
+        // A device token alone is not enough: keep the foreground fallback until
+        // the backend confirms all APNs provider credentials are configured.
+        guard !PushRegistration.shared.isRemotePushReady else { return }
         for event in events where !seen.contains(event.key) {
             post(title: event.title, body: event.body, id: event.key)
         }

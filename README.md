@@ -80,7 +80,9 @@ Set these in the Convex dashboard (Settings, then Environment Variables) or with
 | `APNS_PRIVATE_KEY` | Contents of the .p8 file. Literal `\n` sequences are accepted. |
 | `APNS_TOPIC` | The app's bundle ID, e.g. `com.jamesshah.ldrcards`. |
 
-Without the `APNS_*` variables, pushes are skipped and the app falls back to realtime updates plus local notifications while it's running.
+Without all four `APNS_*` variables, provider pushes are skipped. The app keeps its
+local-notification fallback enabled, but that fallback is driven by the live Convex
+subscription and therefore works only while the app process is running.
 
 ## iOS app (Mac setup)
 
@@ -151,11 +153,41 @@ Screenshots of each step are attached to the test result.
 
 Both need a paid Apple Developer account and a signed build.
 
-1. In the Apple Developer portal, enable **Sign in with Apple** and **Push Notifications** for the App ID `com.jamesshah.ldrcards` (or your own bundle ID; update `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml` and `APPLE_BUNDLE_ID` in Convex to match).
+1. In the Apple Developer portal, enable **Sign in with Apple** and **Push Notifications** for the App ID `com.jamesshah.ldrcards` (or your own bundle ID; update `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml`, `APPLE_BUNDLE_ID`, and `APNS_TOPIC` in Convex to match).
 2. Create `ios/LDRCards/Config/Local.xcconfig`:
    ```
    DEVELOPMENT_TEAM = ABCDE12345
-   CODE_SIGN_ENTITLEMENTS = Support/LDRCards.entitlements
    ```
-3. Create an APNs auth key (Keys, then +, then Apple Push Notifications service) and set the `APNS_*` variables above in Convex.
-4. Run `xcodegen generate` and build to a real device. Debug builds register as `sandbox`, Release builds as `production`.
+   `CODE_SIGN_ENTITLEMENTS` is already configured in `project.yml`; Debug builds use
+   the development APNs environment and Release builds use production.
+3. In the Apple Developer portal, create an APNs auth key (Keys, then +, then
+   **Apple Push Notifications service (APNs)**) and download its `.p8` file. Apple
+   only lets you download this file once.
+4. Set the provider credentials on the same Convex deployment the app uses:
+   ```bash
+   cd backend
+   npx convex env set APNS_TEAM_ID ABCDE12345
+   npx convex env set APNS_KEY_ID 1A2BC3D4E5
+   npx convex env set APNS_PRIVATE_KEY "$(cat /absolute/path/to/AuthKey_1A2BC3D4E5.p8)"
+   npx convex env set APNS_TOPIC com.jamesshah.ldrcards
+   ```
+   James must provide: the paid Apple Developer **Team ID**, the downloaded APNs
+   **`.p8` private key**, its **Key ID**, and the app's exact **bundle ID/topic**.
+5. Run `xcodegen generate` and build to a real device. Grant notification permission
+   when prompted. The app registers with APNs, stores the device token in Convex, and
+   the backend sends through the sandbox or production APNs host as appropriate.
+
+### Test a background notification in Simulator
+
+Simulator push injection does not need an Apple account or APNs provider key. Build
+and launch the app once, grant notification permission, then put it in the background
+or terminate it. From `ios/LDRCards`, run:
+
+```bash
+xcrun simctl push booted com.jamesshah.ldrcards Support/sample-background.apns
+```
+
+The checked-in sample includes an alert, sound, badge, bundle target, and example
+`playId`. This proves the iOS entitlement, authorization, and background presentation
+path. It does not prove the Convex-to-APNs provider connection; that requires the four
+credentials above.
