@@ -11,6 +11,7 @@ enum HandDisplayMode: String, CaseIterable, Identifiable {
 
 struct HandView: View {
     @EnvironmentObject private var store: GameStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selection: String?
     @State private var cardToPlay: HandCard?
     @State private var showingCustomCard = false
@@ -249,6 +250,7 @@ struct HandView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.brand)
+                    .id(colorScheme)
                     .controlSize(.large)
                     .padding(.horizontal, 28)
                     .disabled(store.couple?.status != .active)
