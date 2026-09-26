@@ -383,6 +383,20 @@ describe("rules", () => {
     await expect(play(t, alice, handId)).rejects.toThrow(/season has ended/);
   });
 
+  test("a new custom card is first without reshuffling the existing hand", async () => {
+    const { t, alice } = await setupCouple();
+    const before = (await hand(t, alice)).cards.map((card) => card.handId);
+    await t.mutation(api.cards.createCustom, {
+      sessionToken: alice,
+      title: "Our newest card",
+      body: "This should be first.",
+    });
+    const after = (await hand(t, alice)).cards;
+    expect(after[0]!.title).toBe("Our newest card");
+    expect(after[0]!.isCustom).toBe(true);
+    expect(after.slice(1).map((card) => card.handId)).toEqual(before);
+  });
+
   test("players can write up to five custom cards", async () => {
     const { t, alice } = await setupCouple();
     for (let i = 1; i <= 5; i++) {
