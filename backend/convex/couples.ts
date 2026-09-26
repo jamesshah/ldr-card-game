@@ -205,8 +205,10 @@ export const recap = userQuery({
       .withIndex("by_couple_and_owner", (q) => q.eq("coupleId", couple._id))
       .collect();
 
+    const partnerId = couple.playerA === ctx.user._id ? couple.playerB : couple.playerA;
     const players = [];
-    for (const userId of [couple.playerA, couple.playerB]) {
+    // UI lays this array out left-to-right. Partner is always left, signed-in user right.
+    for (const userId of [partnerId, ctx.user._id]) {
       const user = await ctx.db.get("users", userId);
       const actions = plays.filter((p) => p.kind === "action");
       players.push({

@@ -10,7 +10,7 @@ struct RecapView: View {
                     VStack(spacing: 20) {
                         header(recap)
                         HStack(alignment: .top, spacing: 12) {
-                            ForEach(recap.players) { player in
+                            ForEach(orderedPlayers(recap)) { player in
                                 PlayerStatsCard(player: player, isMe: player.userId == store.couple?.me.id)
                             }
                         }
@@ -32,6 +32,13 @@ struct RecapView: View {
             }
             .background(Theme.canvas)
             .navigationTitle(store.recap?.status == .ended ? "Season recap" : "Season so far")
+        }
+    }
+
+    private func orderedPlayers(_ recap: Recap) -> [RecapPlayer] {
+        guard let myID = store.couple?.me.id else { return recap.players }
+        return recap.players.sorted { lhs, rhs in
+            (lhs.userId == myID ? 1 : 0) < (rhs.userId == myID ? 1 : 0)
         }
     }
 
