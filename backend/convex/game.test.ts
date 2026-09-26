@@ -23,7 +23,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-async function setupCouple(opts: { bobOffset?: number } = {}) {
+async function setupCouple(opts: { bobOffset?: number; bobTimeZone?: string } = {}) {
   const t = convexTest(schema, modules);
   await t.mutation(internal.seed.run, {});
   const alice = await t.mutation(api.auth.signInDev, {
@@ -33,7 +33,7 @@ async function setupCouple(opts: { bobOffset?: number } = {}) {
   });
   const bob = await t.mutation(api.auth.signInDev, {
     name: "Bob",
-    timeZone: "UTC",
+    timeZone: opts.bobTimeZone ?? "UTC",
     utcOffsetMinutes: opts.bobOffset ?? 0,
   });
   await t.mutation(api.couples.create, { sessionToken: alice, timeframeDays: 30 });
@@ -331,7 +331,10 @@ describe("rules", () => {
 
   test("cards played during quiet hours are delivered when they end", async () => {
     // Bob is UTC-5 with quiet hours 22:00-07:00 local.
-    const { t, alice, bob } = await setupCouple({ bobOffset: -300 });
+    const { t, alice, bob } = await setupCouple({
+      bobOffset: -300,
+      bobTimeZone: "America/New_York",
+    });
     await t.mutation(api.users.setQuietHours, {
       sessionToken: bob,
       startMinutes: 22 * 60,
