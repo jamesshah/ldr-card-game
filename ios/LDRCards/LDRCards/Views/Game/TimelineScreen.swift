@@ -76,6 +76,15 @@ private struct TimelineRow: View {
                         .font(.subheadline)
                         .foregroundStyle(tint)
                 }
+                if !play.delivered, let partner {
+                    let zone = GameFormatting.timeZone(
+                        identifier: partner.timeZone,
+                        utcOffsetMinutes: partner.utcOffsetMinutes
+                    )
+                    Text("Delivers \(GameFormatting.clockTime(play.deliverDate, timeZone: zone)) for \(partner.name)")
+                        .font(.caption)
+                        .foregroundStyle(Theme.warning)
+                }
                 if play.state == .completed || play.state == .proofSubmitted {
                     ProofView(play: play)
                 }
