@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as cards from "../cards.js";
 import type * as couples from "../couples.js";
 import type * as devices from "../devices.js";
+import type * as lib_apnsConfig from "../lib/apnsConfig.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_game from "../lib/game.js";
 import type * as lib_rules from "../lib/rules.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   cards: typeof cards;
   couples: typeof couples;
   devices: typeof devices;
+  "lib/apnsConfig": typeof lib_apnsConfig;
   "lib/auth": typeof lib_auth;
   "lib/game": typeof lib_game;
   "lib/rules": typeof lib_rules;

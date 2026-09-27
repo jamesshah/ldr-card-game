@@ -123,7 +123,7 @@ struct InboxView: View {
                                     .foregroundStyle(.secondary)
                             } else {
                                 Label(
-                                    "Held for quiet hours. Arrives \(play.deliverDate.formatted(date: .omitted, time: .shortened)) your time.",
+                                    heldDeliveryMessage(for: play),
                                     systemImage: "moon.zzz.fill"
                                 )
                                 .font(.subheadline)
@@ -138,6 +138,14 @@ struct InboxView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Theme.canvas)
+    }
+
+    private func heldDeliveryMessage(for play: Play) -> String {
+        guard let me = store.couple?.me else {
+            return "Held for quiet hours. It will arrive when they end."
+        }
+        let zone = GameFormatting.timeZone(identifier: me.timeZone, utcOffsetMinutes: me.utcOffsetMinutes)
+        return "Held for quiet hours. Arrives \(GameFormatting.clockTime(play.deliverDate, timeZone: zone)) your time."
     }
 }
 
@@ -221,11 +229,26 @@ struct CounterSheet: View {
                                 if await store.counter(play, with: card) { dismiss() }
                             }
                         } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(card.title).font(.headline)
-                                Text(card.body).font(.subheadline).foregroundStyle(.secondary)
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "shield.lefthalf.filled")
+                                    .font(.title3)
+                                    .foregroundStyle(Theme.brand)
+                                    .frame(width: 24)
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(card.title)
+                                        .font(.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    Text(card.body)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.secondaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer(minLength: 0)
                             }
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         .disabled(store.isWorking)
                     }
                 }
@@ -320,6 +343,12 @@ struct ProofView: View {
 
 #Preview("Counter sheet") {
     CounterSheet(play: PreviewData.incomingPending).previewEnvironment()
+}
+
+#Preview("Counter sheet · dark") {
+    CounterSheet(play: PreviewData.incomingPending)
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Counter sheet · none left") {

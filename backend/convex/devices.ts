@@ -1,12 +1,13 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { userMutation } from "./lib/auth";
+import { apnsConfigured } from "./lib/apnsConfig";
 
 const apnsEnvironment = v.union(v.literal("sandbox"), v.literal("production"));
 
 export const register = userMutation({
   args: { apnsToken: v.string(), environment: apnsEnvironment },
-  returns: v.null(),
+  returns: v.boolean(),
   handler: async (ctx, { apnsToken, environment }) => {
     const existing = await ctx.db
       .query("devices")
@@ -17,7 +18,7 @@ export const register = userMutation({
     } else {
       await ctx.db.insert("devices", { userId: ctx.user._id, apnsToken, environment });
     }
-    return null;
+    return apnsConfigured();
   },
 });
 

@@ -22,6 +22,12 @@ final class PreviewRenderingTests: XCTestCase {
             ("Season header", AnyView(SeasonHeader(couple: PreviewData.pairedCouple).padding())),
             ("Hand", AnyView(HandView().previewEnvironment(paired()))),
             ("Hand · dark", AnyView(HandView().previewEnvironment(paired()).preferredColorScheme(.dark))),
+            ("Hand · list", AnyView(HandView(previewDisplayMode: .list).previewEnvironment(paired()))),
+            ("Hand · list · dark", AnyView(HandView(previewDisplayMode: .list)
+                .previewEnvironment(paired()).preferredColorScheme(.dark))),
+            ("Hand · filtered Custom", AnyView(HandView(previewCategory: "Custom").previewEnvironment(paired()))),
+            ("Hand · filtered Custom · dark", AnyView(HandView(previewCategory: "Custom")
+                .previewEnvironment(paired()).preferredColorScheme(.dark))),
             ("Hand · empty", AnyView(HandView().previewEnvironment(.previewPaired(hand: PreviewData.emptyHand)))),
             ("Hand · counters only", AnyView(HandView().previewEnvironment(.previewPaired(hand: PreviewData.counterOnlyHand)))),
             ("Play sheet · stack option", AnyView(PlayCardSheet(card: PreviewData.voiceCard).previewEnvironment(
@@ -43,6 +49,8 @@ final class PreviewRenderingTests: XCTestCase {
             ("Inbox · held for quiet hours", AnyView(InboxView().previewEnvironment(.previewPaired(inbox: PreviewData.quietHoursInbox)))),
             ("Inbox · dark", AnyView(InboxView().previewEnvironment(paired()).preferredColorScheme(.dark))),
             ("Counter sheet", AnyView(CounterSheet(play: PreviewData.incomingPending).previewEnvironment(paired()))),
+            ("Counter sheet · dark", AnyView(CounterSheet(play: PreviewData.incomingPending)
+                .previewEnvironment(paired()).preferredColorScheme(.dark))),
             ("Counter sheet · none left", AnyView(CounterSheet(play: PreviewData.incomingPending)
                 .previewEnvironment(.previewPaired(hand: PreviewData.emptyHand)))),
             ("Text proof", AnyView(ProofView(play: PreviewData.pendingProofReview).padding())),

@@ -1,0 +1,12 @@
+{
+  "Simulator Target Bundle": "com.jamesshah.ldrcards",
+  "aps": {
+    "alert": {
+      "title": "Theo played a card on you",
+      "body": "Open LDR Cards to see what they picked."
+    },
+    "sound": "default",
+    "badge": 1
+  },
+  "playId": "simulator-preview"
+}

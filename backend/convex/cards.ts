@@ -38,12 +38,19 @@ export const myHand = userQuery({
           kind: card?.kind ?? "action",
           isCustom: card?.coupleId !== undefined,
           stolenFromName: stolenFrom?.name,
+          acquiredAt: h.acquiredAt,
         };
       }),
     );
-    cards.sort((a, b) =>
-      a.kind === b.kind ? a.category.localeCompare(b.category) : a.kind === "action" ? -1 : 1,
-    );
+    cards.sort((a, b) => {
+      // New custom cards are dealt to the front, newest first. The catalog cards keep
+      // their existing action/category order, so creating one card never reshuffles the deck.
+      if (a.isCustom || b.isCustom) {
+        if (a.isCustom && b.isCustom) return b.acquiredAt - a.acquiredAt;
+        return a.isCustom ? -1 : 1;
+      }
+      return a.kind === b.kind ? a.category.localeCompare(b.category) : a.kind === "action" ? -1 : 1;
+    });
 
     const customWritten = await ctx.db
       .query("cards")
@@ -51,7 +58,16 @@ export const myHand = userQuery({
       .collect();
 
     return {
-      cards,
+      cards: cards.map((card) => ({
+        handId: card.handId,
+        cardId: card.cardId,
+        title: card.title,
+        body: card.body,
+        category: card.category,
+        kind: card.kind,
+        isCustom: card.isCustom,
+        stolenFromName: card.stolenFromName,
+      })),
       usedCount: mine.length - unused.length,
       partnerCardsLeft: hands.filter((h) => h.ownerId !== me._id && h.usedAt === undefined).length,
       customCardsLeftToWrite: Math.max(0, MAX_CUSTOM_CARDS_PER_PLAYER - customWritten.length),

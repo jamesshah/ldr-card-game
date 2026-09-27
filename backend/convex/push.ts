@@ -1,15 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-
-export function apnsConfigured(): boolean {
-  return Boolean(
-    process.env.APNS_KEY_ID &&
-      process.env.APNS_TEAM_ID &&
-      process.env.APNS_PRIVATE_KEY &&
-      process.env.APNS_TOPIC,
-  );
-}
+import { apnsConfigured } from "./lib/apnsConfig";
 
 /**
  * Sends a push to every registered device for a user. Without APNs
