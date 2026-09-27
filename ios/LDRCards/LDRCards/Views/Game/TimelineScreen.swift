@@ -24,13 +24,15 @@ struct TimelineScreen: View {
                         Section {
                             ForEach(store.timeline) { play in
                                 TimelineRow(play: play, me: store.couple?.me, partner: store.couple?.partner)
+                                    .listRowBackground(Theme.surface)
                             }
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Timeline")
         }
     }
@@ -42,13 +44,7 @@ private struct TimelineRow: View {
     let partner: Player?
 
     private var tint: Color {
-        switch play.state {
-        case .completed: return .green
-        case .refused: return .red
-        case .countered: return .gray
-        case .proofSubmitted: return .blue
-        case .pending: return .orange
-        }
+        Theme.statusColor(play.state, delivered: play.delivered)
     }
 
     private var headline: String {

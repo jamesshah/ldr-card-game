@@ -26,7 +26,7 @@ struct InboxView: View {
                     list
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Inbox")
             .sheet(item: $completing) { play in CompleteProofSheet(play: play) }
             .sheet(item: $countering) { play in
@@ -76,6 +76,7 @@ struct InboxView: View {
                             onCounter: { countering = play },
                             onRefuse: { refusing = play }
                         )
+                        .listRowBackground(Theme.surface)
                     }
                 }
             }
@@ -98,6 +99,7 @@ struct InboxView: View {
                                     Label("Try again", systemImage: "arrow.uturn.backward").frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.bordered)
+                                .tint(Theme.secondaryText)
                             }
                             // Inside a List row the automatic label style drops the icon.
                             .labelStyle(.titleAndIcon)
@@ -106,6 +108,7 @@ struct InboxView: View {
                             .disabled(store.isWorking)
                         }
                         .padding(.vertical, 6)
+                        .listRowBackground(Theme.surface)
                     }
                 }
             }
@@ -124,14 +127,17 @@ struct InboxView: View {
                                     systemImage: "moon.zzz.fill"
                                 )
                                 .font(.subheadline)
-                                .foregroundStyle(.indigo)
+                                .foregroundStyle(Theme.warning)
                             }
                         }
+                        .listRowBackground(Theme.surface)
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas)
     }
 }
 
@@ -154,7 +160,7 @@ private struct IncomingRow: View {
             if let note = play.proofRejectedNote {
                 Label("\(partnerName) asked for another try: \(note)", systemImage: "arrow.uturn.backward.circle.fill")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.warning)
             }
             if play.state == .proofSubmitted {
                 Label("Proof sent. Waiting for \(partnerName) to accept.", systemImage: "paperplane.fill")
@@ -171,11 +177,13 @@ private struct IncomingRow: View {
                             Label("Counter", systemImage: "shield.lefthalf.filled").frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
+                        .tint(Theme.secondaryText)
                         .disabled(!hasCounter)
                         Button(role: .destructive, action: onRefuse) {
                             Label("Refuse", systemImage: "hand.raised.fill").frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
+                        .tint(Theme.destructive)
                     }
                 }
                 .labelStyle(.titleAndIcon)
@@ -222,6 +230,8 @@ struct CounterSheet: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.canvas)
             .navigationTitle("Shut it down")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -31,7 +31,7 @@ struct HandView: View {
                 }
             }
             .padding(.vertical, 12)
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.canvas)
             .navigationTitle("Your hand")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -94,8 +94,10 @@ struct HandView: View {
                     } label: {
                         Label("Play on \(store.partnerName)", systemImage: "paperplane.fill")
                             .frame(maxWidth: .infinity)
+                            .foregroundStyle(.white)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(Theme.brand)
                     .controlSize(.large)
                     .padding(.horizontal, 28)
                     .disabled(store.couple?.status != .active)
@@ -128,7 +130,7 @@ struct PlayCardSheet: View {
                     if waitingOnPartner {
                         Label("\(store.partnerName) still has to answer your last card. You can play again once they respond.", systemImage: "hourglass")
                             .font(.subheadline)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     }
 
                     if let partner = store.partner,
@@ -139,7 +141,7 @@ struct PlayCardSheet: View {
                             systemImage: "moon.zzz.fill"
                         )
                         .font(.subheadline)
-                        .foregroundStyle(.indigo)
+                        .foregroundStyle(Theme.warning)
                     }
 
                     if !stackable.isEmpty {
@@ -161,6 +163,7 @@ struct PlayCardSheet: View {
                 }
                 .padding(20)
             }
+            .background(Theme.canvas)
             .navigationTitle("Play this card?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -211,6 +214,8 @@ struct CustomCardSheet: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.canvas)
             .navigationTitle("Custom card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -239,6 +244,26 @@ struct CustomCardSheet: View {
     HandView()
         .previewEnvironment()
         .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · SE", traits: .fixedLayout(width: 375, height: 667)) {
+    HandView().previewEnvironment()
+}
+
+#Preview("Hand · Pro Max", traits: .fixedLayout(width: 440, height: 956)) {
+    HandView().previewEnvironment()
+}
+
+#Preview("Hand · Pro Max · dark", traits: .fixedLayout(width: 440, height: 956)) {
+    HandView()
+        .previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Hand · grayscale") {
+    HandView()
+        .previewEnvironment()
+        .grayscale(1)
 }
 
 #Preview("Hand · empty") {

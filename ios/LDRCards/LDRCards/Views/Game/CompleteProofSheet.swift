@@ -63,6 +63,8 @@ struct CompleteProofSheet: View {
                         .lineLimit(2...6)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.canvas)
             .navigationTitle("Complete card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -119,7 +121,7 @@ struct CompleteProofSheet: View {
                           systemImage: recorder.isRecording ? "stop.circle.fill" : "mic.circle.fill")
                         .font(.headline)
                 }
-                .tint(recorder.isRecording ? .red : Theme.rose)
+                .tint(recorder.isRecording ? Theme.destructive : Theme.brand)
                 Spacer()
                 Text(Duration.seconds(recorder.elapsed).formatted(.time(pattern: .minuteSecond)))
                     .font(.body.monospacedDigit())
@@ -127,7 +129,7 @@ struct CompleteProofSheet: View {
             }
             if recorder.recordingURL != nil && !recorder.isRecording {
                 Label("Voice note ready to send", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.success)
             }
             Text("Up to \(Int(VoiceRecorder.maxDuration)) seconds.")
                 .font(.footnote)

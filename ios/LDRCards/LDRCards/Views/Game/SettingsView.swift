@@ -60,6 +60,8 @@ struct SettingsView: View {
                     Button("Sign out", role: .destructive) { Task { await session.signOut() } }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.canvas)
             .navigationTitle("Settings")
             .sheet(isPresented: $showingCustomCard) { CustomCardSheet() }
             .onAppear(perform: loadFromProfile)
