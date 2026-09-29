@@ -4,10 +4,10 @@ node_modules/
 .DS_Store
 
 # Xcode / XcodeGen
-ios/LDRCards/LDRCards.xcodeproj/
-ios/LDRCards/build/
-ios/LDRCards/Support/Info.plist
-ios/LDRCards/Config/Local.xcconfig
+ios/NudgeDeck/NudgeDeck.xcodeproj/
+ios/NudgeDeck/build/
+ios/NudgeDeck/Support/Info.plist
+ios/NudgeDeck/Config/Local.xcconfig
 DerivedData/
 xcuserdata/
 *.xcuserstate

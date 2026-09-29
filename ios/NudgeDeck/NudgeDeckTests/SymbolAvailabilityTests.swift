@@ -1,6 +1,6 @@
 import UIKit
 import XCTest
-@testable import LDRCards
+@testable import NudgeDeck
 
 /// A misspelled or unavailable SF Symbol renders as nothing, so check every name the app uses.
 final class SymbolAvailabilityTests: XCTestCase {

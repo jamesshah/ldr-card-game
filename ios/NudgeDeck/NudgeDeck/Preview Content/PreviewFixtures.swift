@@ -232,7 +232,7 @@ extension SessionStore {
 }
 
 extension View {
-    /// Injects offline stores and the app tint, the way `LDRCardsApp` does for live ones.
+    /// Injects offline stores and the app tint, the way `NudgeDeckApp` does for live ones.
     @MainActor
     func previewEnvironment(_ store: GameStore? = nil, session: SessionStore? = nil) -> some View {
         environmentObject(store ?? .previewPaired())

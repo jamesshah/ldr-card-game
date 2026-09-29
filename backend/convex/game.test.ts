@@ -464,7 +464,7 @@ describe("APNs configuration", () => {
     vi.stubEnv("APNS_TEAM_ID", "TEAM123");
     vi.stubEnv("APNS_PRIVATE_KEY", "PRIVATE KEY");
     expect(apnsConfigured()).toBe(false);
-    vi.stubEnv("APNS_TOPIC", "com.jamesshah.ldrcards");
+    vi.stubEnv("APNS_TOPIC", "com.jamesshah.nudgedeck");
     expect(apnsConfigured()).toBe(true);
   });
 });

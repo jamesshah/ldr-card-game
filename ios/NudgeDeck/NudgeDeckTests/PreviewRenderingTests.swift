@@ -1,6 +1,6 @@
 import SwiftUI
 import XCTest
-@testable import LDRCards
+@testable import NudgeDeck
 
 /// Renders the same views the `#Preview` blocks show, offline, so a preview that crashes,
 /// traps, or draws nothing fails the test run. Each render is attached to the test result.

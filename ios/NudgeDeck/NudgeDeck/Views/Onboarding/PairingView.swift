@@ -113,7 +113,7 @@ struct WaitingForPartnerView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         HStack {
-                            ShareLink(item: "Play LDR Cards with me! Join with code \(couple.inviteCode)") {
+                            ShareLink(item: "Play Nudge Deck with me! Join with code \(couple.inviteCode)") {
                                 Label("Share", systemImage: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderedProminent)

@@ -1,9 +1,9 @@
 {
-  "Simulator Target Bundle": "com.jamesshah.ldrcards",
+  "Simulator Target Bundle": "com.jamesshah.nudgedeck",
   "aps": {
     "alert": {
       "title": "Theo played a card on you",
-      "body": "Open LDR Cards to see what they picked."
+      "body": "Open Nudge Deck to see what they picked."
     },
     "sound": "default",
     "badge": 1

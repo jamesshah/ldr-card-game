@@ -1,6 +1,6 @@
 import AuthenticationServices
 import XCTest
-@testable import LDRCards
+@testable import NudgeDeck
 
 final class GameFormattingTests: XCTestCase {
     private let posix = Locale(identifier: "en_US_POSIX")
