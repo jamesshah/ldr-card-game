@@ -1,5 +1,5 @@
 import XCTest
-@testable import LDRCards
+@testable import NudgeDeck
 
 final class ModelDecodingTests: XCTestCase {
     private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {

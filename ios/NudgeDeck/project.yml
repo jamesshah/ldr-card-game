@@ -1,4 +1,4 @@
-name: LDRCards
+name: NudgeDeck
 options:
   bundleIdPrefix: com.jamesshah
   deploymentTarget:
@@ -19,18 +19,18 @@ settings:
     "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
 
 targets:
-  LDRCards:
+  NudgeDeck:
     type: application
     platform: iOS
     sources:
-      - path: LDRCards
+      - path: NudgeDeck
     configFiles:
       Debug: Config/App.xcconfig
       Release: Config/App.xcconfig
     info:
       path: Support/Info.plist
       properties:
-        CFBundleDisplayName: LDR Cards
+        CFBundleDisplayName: Nudge Deck
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CONVEX_URL: $(CONVEX_URL)
@@ -45,11 +45,11 @@ targets:
           NSAllowsLocalNetworking: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.ldrcards
+        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.nudgedeck
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        CODE_SIGN_ENTITLEMENTS: Support/LDRCards.entitlements
+        CODE_SIGN_ENTITLEMENTS: Support/NudgeDeck.entitlements
       configs:
         Debug:
           APS_ENVIRONMENT: development
@@ -60,39 +60,39 @@ targets:
         product: ConvexMobile
     scheme:
       testTargets:
-        - LDRCardsTests
+        - NudgeDeckTests
 
-  LDRCardsTests:
+  NudgeDeckTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: LDRCardsTests
+      - path: NudgeDeckTests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.ldrcards.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.nudgedeck.tests
     dependencies:
-      - target: LDRCards
+      - target: NudgeDeck
 
-  LDRCardsSmokeUITests:
+  NudgeDeckSmokeUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - path: LDRCardsSmokeUITests
+      - path: NudgeDeckSmokeUITests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.ldrcards.smokeuitests
-        TEST_TARGET_NAME: LDRCards
+        PRODUCT_BUNDLE_IDENTIFIER: com.jamesshah.nudgedeck.smokeuitests
+        TEST_TARGET_NAME: NudgeDeck
     dependencies:
-      - target: LDRCards
+      - target: NudgeDeck
 
 schemes:
-  LDRCardsSmoke:
+  NudgeDeckSmoke:
     build:
       targets:
-        LDRCards: all
-        LDRCardsSmokeUITests: [test]
+        NudgeDeck: all
+        NudgeDeckSmokeUITests: [test]
     test:
       targets:
-        - LDRCardsSmokeUITests
+        - NudgeDeckSmokeUITests

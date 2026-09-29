@@ -53,7 +53,7 @@ export const signInWithApple = action({
   args: { identityToken: v.string(), name: nullable(v.string()), ...deviceTime },
   returns: v.string(),
   handler: async (ctx, args): Promise<string> => {
-    const audience = process.env.APPLE_BUNDLE_ID ?? "com.jamesshah.ldrcards";
+    const audience = process.env.APPLE_BUNDLE_ID ?? "com.jamesshah.nudgedeck";
     let sub: string;
     try {
       const { payload } = await jwtVerify(args.identityToken, appleKeys, {

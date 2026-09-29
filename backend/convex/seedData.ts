@@ -22,7 +22,7 @@ const counter = (slug: string, title: string, body: string): SeedCard => ({
   kind: "counter",
 });
 
-/** The original LDR deck: 54 action cards and 6 counter cards. */
+/** The original Nudge Deck: 54 action cards and 6 counter cards. */
 export const SEED_CARDS: SeedCard[] = [
   // Calls
   action("call-now", "Calls", "Video call me right now", "Drop what you're doing (safely) and call me within 15 minutes."),

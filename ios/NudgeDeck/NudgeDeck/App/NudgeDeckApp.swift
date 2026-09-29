@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct LDRCardsApp: App {
+struct NudgeDeckApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var session = SessionStore()
 

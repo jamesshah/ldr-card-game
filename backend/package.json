@@ -1,8 +1,8 @@
 {
-  "name": "ldr-cards-backend",
+  "name": "nudge-deck-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Convex backend for the LDR Couple Card Game",
+  "description": "Convex backend for Nudge Deck",
   "type": "module",
   "scripts": {
     "dev": "convex dev",

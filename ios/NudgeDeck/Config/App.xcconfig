@@ -7,7 +7,7 @@ ENABLE_DEV_SIGNIN[config=Debug] = YES
 
 // Set these in Local.xcconfig to enable Sign in with Apple and APNs on a real device:
 //   DEVELOPMENT_TEAM = ABCDE12345
-//   CODE_SIGN_ENTITLEMENTS = Support/LDRCards.entitlements
+//   CODE_SIGN_ENTITLEMENTS = Support/NudgeDeck.entitlements
 // Point at a local `npx convex dev` backend with:
 //   CONVEX_URL = http:/$()/127.0.0.1:3210
 #include? "Local.xcconfig"

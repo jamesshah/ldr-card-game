@@ -1,5 +1,5 @@
 import XCTest
-@testable import LDRCards
+@testable import NudgeDeck
 
 final class NotificationEventTests: XCTestCase {
     private func play(id: String, state: PlayState, stacked: Bool = false, rejectedNote: String? = nil) -> Play {

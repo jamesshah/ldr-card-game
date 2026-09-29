@@ -75,7 +75,7 @@ struct SignInView: View {
             .padding(.vertical, 8)
             .accessibilityHidden(true)
 
-            Text("LDR Cards")
+            Text("Nudge Deck")
                 .font(.system(.largeTitle, design: .rounded).weight(.heavy))
             Text("A card game for couples who live apart. Play a card on your partner any time. They do what it says, send proof, or pay the price.")
                 .font(.body)

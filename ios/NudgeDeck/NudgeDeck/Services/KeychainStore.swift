@@ -3,7 +3,7 @@ import Security
 
 /// Stores the session token in the Keychain so it survives reinstalls of the same build.
 enum KeychainStore {
-    private static let service = "com.jamesshah.ldrcards"
+    private static let service = "com.jamesshah.nudgedeck"
     private static let account = "sessionToken"
 
     private static var baseQuery: [String: Any] {
