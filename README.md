@@ -1,4 +1,4 @@
-# LDR Cards
+# Nudge Deck
 
 A card game for long-distance couples. Each partner holds their own hand of cards and plays them on the other whenever they like: "Video call me right now", "Send a 30s voice note", "Order me a surprise delivery". The target completes the card and sends proof (a photo, voice note, or text), shuts it down with a counter card, or refuses it and lets their partner steal a card from their hand. A season runs for a week, a month, 3 months, or 6 months, then both players get a recap.
 
@@ -31,13 +31,13 @@ backend/            Convex backend
     auth.ts         dev sign-in and Sign in with Apple
     push.ts         push dispatch (no-op until APNs is configured)
     apns.ts         APNs HTTP/2 sender ("use node")
-    seedData.ts     the original 60-card LDR deck
+    seedData.ts     the original 60-card Nudge Deck
     game.test.ts    rule tests (convex-test + vitest)
-ios/LDRCards/       SwiftUI app
+ios/NudgeDeck/       SwiftUI app
   project.yml       XcodeGen project spec
   Config/App.xcconfig   CONVEX_URL build setting
-  LDRCards/         app sources
-  LDRCardsTests/    unit tests
+  NudgeDeck/         app sources
+  NudgeDeckTests/    unit tests
 ```
 
 ## Backend
@@ -73,12 +73,12 @@ Set these in the Convex dashboard (Settings, then Environment Variables) or with
 
 | Variable | Purpose |
 | --- | --- |
-| `APPLE_BUNDLE_ID` | Audience for Sign in with Apple tokens. Defaults to `com.jamesshah.ldrcards`. |
+| `APPLE_BUNDLE_ID` | Audience for Sign in with Apple tokens. Defaults to `com.jamesshah.nudgedeck`. |
 | `ALLOW_DEV_SIGNIN` | Set to `true` to allow the name-only test sign-in (`auth:signInDev`). Any other value, or leaving it unset, rejects it. Never set it on production. |
 | `APNS_KEY_ID` | Key ID of your APNs auth key (.p8). |
 | `APNS_TEAM_ID` | Your Apple Developer team ID. |
 | `APNS_PRIVATE_KEY` | Contents of the .p8 file. Literal `\n` sequences are accepted. |
-| `APNS_TOPIC` | The app's bundle ID, e.g. `com.jamesshah.ldrcards`. |
+| `APNS_TOPIC` | The app's bundle ID, e.g. `com.jamesshah.nudgedeck`. |
 
 Without all four `APNS_*` variables, provider pushes are skipped. The app keeps its
 local-notification fallback enabled, but that fallback is driven by the live Convex
@@ -90,17 +90,17 @@ Requires Xcode 15 or later with an iOS 17+ Simulator runtime, and [XcodeGen](htt
 
 ```bash
 brew install xcodegen
-cd ios/LDRCards
+cd ios/NudgeDeck
 xcodegen generate
-open LDRCards.xcodeproj
+open NudgeDeck.xcodeproj
 ```
 
 Run the tests from the command line:
 
 ```bash
-cd ios/LDRCards
+cd ios/NudgeDeck
 xcodegen generate
-xcodebuild test -project LDRCards.xcodeproj -scheme LDRCards \
+xcodebuild test -project NudgeDeck.xcodeproj -scheme NudgeDeck \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
@@ -108,11 +108,11 @@ Swift Package Manager fetches ConvexMobile on first build.
 
 ### Canvas previews
 
-Every screen and its main subviews have `#Preview` blocks that run offline. `GameStore(previewCouple:...)` and `SessionStore(previewState:)` are preview-only initializers that never create a Convex client. The sample data lives in `LDRCards/Preview Content/PreviewFixtures.swift` (`PreviewData`), all behind `#if DEBUG`: a couple in San Francisco and London, a hand covering every card category, and plays in every state. `PreviewRenderingTests` renders the same scenarios in the Simulator during `xcodebuild test` and fails on any that come out blank. Each render is attached to the test result.
+Every screen and its main subviews have `#Preview` blocks that run offline. `GameStore(previewCouple:...)` and `SessionStore(previewState:)` are preview-only initializers that never create a Convex client. The sample data lives in `NudgeDeck/Preview Content/PreviewFixtures.swift` (`PreviewData`), all behind `#if DEBUG`: a couple in San Francisco and London, a hand covering every card category, and plays in every state. `PreviewRenderingTests` renders the same scenarios in the Simulator during `xcodebuild test` and fails on any that come out blank. Each render is attached to the test result.
 
 ### Pointing at a different backend
 
-`CONVEX_URL` lives in `ios/LDRCards/Config/App.xcconfig`. To override it without touching the repo, create `ios/LDRCards/Config/Local.xcconfig` (gitignored):
+`CONVEX_URL` lives in `ios/NudgeDeck/Config/App.xcconfig`. To override it without touching the repo, create `ios/NudgeDeck/Config/Local.xcconfig` (gitignored):
 
 ```
 CONVEX_URL = http:/$()/127.0.0.1:3210
@@ -138,12 +138,12 @@ With the panel hidden, Sign in with Apple is the only way in.
 
 ### Two-player smoke test
 
-The `LDRCardsSmoke` scheme runs a UI test that drives one player in the Simulator and the partner through the Convex HTTP API. It covers pairing, playing, sending proof back for another try, accepting, completing with a note, refusing (with the steal), and countering. It needs a local backend (`npx convex dev`, seeded) and the `Local.xcconfig` override above:
+The `NudgeDeckSmoke` scheme runs a UI test that drives one player in the Simulator and the partner through the Convex HTTP API. It covers pairing, playing, sending proof back for another try, accepting, completing with a note, refusing (with the steal), and countering. It needs a local backend (`npx convex dev`, seeded) and the `Local.xcconfig` override above:
 
 ```bash
-cd ios/LDRCards
+cd ios/NudgeDeck
 xcodegen generate
-xcodebuild test -project LDRCards.xcodeproj -scheme LDRCardsSmoke \
+xcodebuild test -project NudgeDeck.xcodeproj -scheme NudgeDeckSmoke \
   -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
 ```
 
@@ -153,8 +153,8 @@ Screenshots of each step are attached to the test result.
 
 Both need a paid Apple Developer account and a signed build.
 
-1. In the Apple Developer portal, enable **Sign in with Apple** and **Push Notifications** for the App ID `com.jamesshah.ldrcards` (or your own bundle ID; update `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml`, `APPLE_BUNDLE_ID`, and `APNS_TOPIC` in Convex to match).
-2. Create `ios/LDRCards/Config/Local.xcconfig`:
+1. In the Apple Developer portal, enable **Sign in with Apple** and **Push Notifications** for the App ID `com.jamesshah.nudgedeck` (or your own bundle ID; update `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml`, `APPLE_BUNDLE_ID`, and `APNS_TOPIC` in Convex to match).
+2. Create `ios/NudgeDeck/Config/Local.xcconfig`:
    ```
    DEVELOPMENT_TEAM = ABCDE12345
    ```
@@ -169,7 +169,7 @@ Both need a paid Apple Developer account and a signed build.
    npx convex env set APNS_TEAM_ID ABCDE12345
    npx convex env set APNS_KEY_ID 1A2BC3D4E5
    npx convex env set APNS_PRIVATE_KEY "$(cat /absolute/path/to/AuthKey_1A2BC3D4E5.p8)"
-   npx convex env set APNS_TOPIC com.jamesshah.ldrcards
+   npx convex env set APNS_TOPIC com.jamesshah.nudgedeck
    ```
    James must provide: the paid Apple Developer **Team ID**, the downloaded APNs
    **`.p8` private key**, its **Key ID**, and the app's exact **bundle ID/topic**.
@@ -181,10 +181,10 @@ Both need a paid Apple Developer account and a signed build.
 
 Simulator push injection does not need an Apple account or APNs provider key. Build
 and launch the app once, grant notification permission, then put it in the background
-or terminate it. From `ios/LDRCards`, run:
+or terminate it. From `ios/NudgeDeck`, run:
 
 ```bash
-xcrun simctl push booted com.jamesshah.ldrcards Support/sample-background.apns
+xcrun simctl push booted com.jamesshah.nudgedeck Support/sample-background.apns
 ```
 
 The checked-in sample includes an alert, sound, badge, bundle target, and example
