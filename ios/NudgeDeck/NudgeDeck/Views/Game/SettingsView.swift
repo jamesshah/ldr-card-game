@@ -8,11 +8,24 @@ struct SettingsView: View {
     @State private var quietEnabled = false
     @State private var quietStart = GameFormatting.date(fromMinutes: 22 * 60)
     @State private var quietEnd = GameFormatting.date(fromMinutes: 7 * 60)
+    /// Last successfully saved quiet hours (`nil` = off). Draft is compared against this.
+    @State private var savedQuietHours: QuietHours?
     @State private var loaded = false
-    @State private var quietSaved = true
     @State private var showingCustomCard = false
 
     private var me: Player? { store.couple?.me }
+
+    /// True when the draft differs from the last saved quiet-hours setting.
+    private var hasUnsavedQuietHours: Bool {
+        guard loaded else { return false }
+        if quietEnabled {
+            let start = GameFormatting.minutes(from: quietStart)
+            let end = GameFormatting.minutes(from: quietEnd)
+            guard let saved = savedQuietHours else { return true }
+            return saved.startMinutes != start || saved.endMinutes != end
+        }
+        return savedQuietHours != nil
+    }
 
     var body: some View {
         NavigationStack {
@@ -42,12 +55,12 @@ struct SettingsView: View {
                         if store.isWorking {
                             ProgressView().frame(maxWidth: .infinity)
                         } else {
-                            Text(quietSaved ? "Quiet hours saved" : "Save quiet hours")
+                            Text(hasUnsavedQuietHours ? "Save quiet hours" : "Quiet hours saved")
                                 .frame(maxWidth: .infinity)
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(store.isWorking || quietSaved)
+                    .disabled(store.isWorking || !hasUnsavedQuietHours)
                 } footer: {
                     Text("Nudges \(store.partnerName) sends during quiet hours are held and delivered when they end.")
                 }
@@ -78,32 +91,31 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sheet(isPresented: $showingCustomCard) { CustomCardSheet() }
             .onAppear(perform: loadFromProfile)
-            .onChange(of: quietEnabled) { _, _ in if loaded { quietSaved = false } }
-            .onChange(of: quietStart) { _, _ in if loaded { quietSaved = false } }
-            .onChange(of: quietEnd) { _, _ in if loaded { quietSaved = false } }
         }
     }
 
     private func loadFromProfile() {
         guard !loaded, let me else { return }
         name = me.name
+        savedQuietHours = me.quietHours
         if let quiet = me.quietHours {
             quietEnabled = true
             quietStart = GameFormatting.date(fromMinutes: quiet.startMinutes)
             quietEnd = GameFormatting.date(fromMinutes: quiet.endMinutes)
         }
-        // Let the onChange handlers from the initial load settle before saving user edits.
-        DispatchQueue.main.async { loaded = true }
+        loaded = true
     }
 
     private func saveQuietHours() async {
-        guard loaded else { return }
+        guard loaded, hasUnsavedQuietHours else { return }
         let start = GameFormatting.minutes(from: quietStart)
         let end = GameFormatting.minutes(from: quietEnd)
         if quietEnabled {
-            quietSaved = await store.setQuietHours(startMinutes: start, endMinutes: end)
-        } else {
-            quietSaved = await store.setQuietHours(startMinutes: nil, endMinutes: nil)
+            if await store.setQuietHours(startMinutes: start, endMinutes: end) {
+                savedQuietHours = QuietHours(startMinutes: start, endMinutes: end)
+            }
+        } else if await store.setQuietHours(startMinutes: nil, endMinutes: nil) {
+            savedQuietHours = nil
         }
     }
 }
