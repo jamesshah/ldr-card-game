@@ -14,7 +14,7 @@ struct RecapView: View {
                                 PlayerStatsCard(player: player, isMe: player.userId == store.couple?.me.id)
                             }
                         }
-                        Text("Nobody keeps score. At the end of the season, you both just know who won.")
+                        Text("Nobody keeps score. That's one for the relationship.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -23,9 +23,9 @@ struct RecapView: View {
                     .padding(20)
                 } else {
                     ContentUnavailableView(
-                        "Recap unavailable",
+                        "Your relationship called.",
                         systemImage: "trophy",
-                        description: Text("Your recap appears once your partner joins and the season begins.")
+                        description: Text("It wants a Nudge. Your recap shows up once your person joins and the season starts.")
                     )
                     .padding(.top, 80)
                 }
@@ -74,13 +74,13 @@ private struct PlayerStatsCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(isMe ? "You" : player.name)
                 .font(.headline)
-            stat("Cards played", player.played, "paperplane.fill")
+            stat("Nudges sent", player.played, "paperplane.fill")
             stat("Completed for them", player.completedByPartner, "checkmark.seal.fill")
-            stat("Refused by partner", player.refusedByPartner, "hand.raised.fill")
-            stat("Refused", player.refused, "xmark.circle.fill")
+            stat("Passed by partner", player.refusedByPartner, "hand.raised.fill")
+            stat("Passed", player.refused, "xmark.circle.fill")
             stat("Counters used", player.countersUsed, "shield.lefthalf.filled")
-            stat("Cards stolen", player.cardsStolen, "bolt.fill")
-            stat("Cards left", player.cardsLeft, "rectangle.stack.fill")
+            stat("Nudges stolen", player.cardsStolen, "bolt.fill")
+            stat("Nudges left", player.cardsLeft, "rectangle.stack.fill")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

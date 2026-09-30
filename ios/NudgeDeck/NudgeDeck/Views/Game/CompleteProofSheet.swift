@@ -49,7 +49,7 @@ struct CompleteProofSheet: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                 } footer: {
-                    Text("\(play.fromName) reviews your proof and marks the card complete.")
+                    Text("\(play.fromName) reviews your proof and marks the Nudge complete. That's one for the relationship.")
                 }
 
                 switch proofType {
@@ -65,7 +65,7 @@ struct CompleteProofSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.canvas)
-            .navigationTitle("Complete card")
+            .navigationTitle("Nudge complete 🫡")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

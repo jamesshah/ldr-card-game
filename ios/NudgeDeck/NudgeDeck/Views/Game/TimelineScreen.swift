@@ -8,9 +8,9 @@ struct TimelineScreen: View {
             Group {
                 if store.timeline.isEmpty {
                     ContentUnavailableView(
-                        "No cards played yet",
+                        "Your relationship called.",
                         systemImage: "clock",
-                        description: Text("Every card you two play lands here, with the time it was for each of you.")
+                        description: Text("It wants a Nudge. Every one you two send lands here.")
                     )
                 } else {
                     List {
@@ -49,7 +49,7 @@ private struct TimelineRow: View {
 
     private var headline: String {
         if play.kind == .counter {
-            return "\(play.fromName) shut down \(play.counteredTitle.map { "\"\($0)\"" } ?? "a card")"
+            return "\(play.fromName) blocked \(play.counteredTitle.map { "\"\($0)\"" } ?? "a Nudge")"
         }
         return "\(play.fromName) → \(play.toName)"
     }

@@ -1,6 +1,8 @@
 # Nudge Deck — Agent Guide
 
-A card game for long-distance couples: SwiftUI iOS client + Convex backend. **All game rules run in Convex mutations** so clients cannot cheat.
+NudgeDeck — Little things. More together. SwiftUI iOS client + Convex backend. **All game rules run in Convex mutations** so clients cannot cheat.
+
+Vocabulary: **Nudges** (cards), **Deck** (hand), **Pass** (refuse), **Nudge back** (reciprocal play).
 
 ## Layout
 

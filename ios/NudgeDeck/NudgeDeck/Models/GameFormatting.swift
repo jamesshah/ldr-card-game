@@ -87,11 +87,11 @@ enum GameFormatting {
 
     static func stateLabel(_ state: PlayState) -> String {
         switch state {
-        case .pending: return "Waiting"
+        case .pending: return "Your Nudge is waiting… 👀"
         case .proofSubmitted: return "Proof sent"
-        case .completed: return "Completed"
-        case .refused: return "Refused"
-        case .countered: return "Shut down"
+        case .completed: return "Nudge complete 🫡"
+        case .refused: return "Passed"
+        case .countered: return "Blocked"
         }
     }
 

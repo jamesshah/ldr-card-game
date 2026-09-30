@@ -20,15 +20,18 @@ final class NotificationEventTests: XCTestCase {
             waitingOnPartner: [play(id: "4", state: .pending)]
         )
         let events = NotificationService.events(in: inbox)
-        XCTAssertEqual(events.map(\.title), ["Alice played a card on you", "Bob sent proof"])
+        XCTAssertEqual(events.map(\.title), ["👀 You've been nudged.", "Bob sent proof"])
+        XCTAssertEqual(events.map(\.body), ["Your person sent you something.", "A Nudge is waiting for your review."])
     }
 
     func testStackedAndRejectedCardsGetDistinctKeysAndTitles() {
         let stacked = NotificationService.events(in: Inbox(incoming: [play(id: "1", state: .pending, stacked: true)], toReview: [], waitingOnPartner: []))
-        XCTAssertEqual(stacked.first?.title, "Alice stacked a card on you")
+        XCTAssertEqual(stacked.first?.title, "👀 You've been nudged.")
+        XCTAssertEqual(stacked.first?.body, "Someone stacked another Nudge on you.")
 
         let retry = NotificationService.events(in: Inbox(incoming: [play(id: "1", state: .pending, rejectedNote: "Closer!")], toReview: [], waitingOnPartner: []))
         XCTAssertEqual(retry.first?.title, "Alice wants another try")
+        XCTAssertEqual(retry.first?.body, "Someone wants your attention.")
         XCTAssertNotEqual(retry.first?.key, stacked.first?.key)
     }
 }

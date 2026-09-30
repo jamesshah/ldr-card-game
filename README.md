@@ -1,21 +1,23 @@
 # Nudge Deck
 
-A card game for long-distance couples. Each partner holds their own hand of cards and plays them on the other whenever they like: "Video call me right now", "Send a 30s voice note", "Order me a surprise delivery". The target completes the card and sends proof (a photo, voice note, or text), shuts it down with a counter card, or refuses it and lets their partner steal a card from their hand. A season runs for a week, a month, 3 months, or 6 months, then both players get a recap.
+NudgeDeck — Little things. More together.
+
+A playful couples game where you send each other little challenges, dares, questions, and things to do together. Pick a Deck → get a Nudge → send it → they respond → Nudge back.
 
 - **iOS app**: native SwiftUI (iOS 17+), using [ConvexMobile](https://github.com/get-convex/convex-swift) for realtime queries and mutations.
 - **Backend**: [Convex](https://convex.dev). All game rules run in Convex mutations, so neither client can cheat.
 
 ## Rules
 
-- Joining a couple deals the 60-card deck: each player gets a unique 30 cards, including 3 counter cards.
-- Every card is single use.
-- You can't play another card until your partner responds to your last one (completes, sends proof, counters, or refuses).
-- Cards stack: you can play a card on top of one your partner played on you. Both stay in play, and neither cancels the other.
-- **Counter** cards knock a card played on you out of the game.
-- **Refusing** a card lets the sender steal a random card from your hand and use it against you.
+- Joining a couple deals the 60-Nudge deck: each player gets a unique 30 Nudges, including 3 counters.
+- Every Nudge is single use.
+- You can't send another until your person responds to your last one (completes, sends proof, counters, or passes).
+- Nudges stack: you can send one on top of one they sent you. Both stay in play.
+- **Counter** Nudges block one that was sent to you.
+- **Passing** a Nudge lets the sender steal a random one from your Deck and Nudge you back with it.
 - **Proof**: the target attaches a photo, voice note, or note. The sender accepts it or sends it back for another try.
-- **Quiet hours**: a card played during your quiet hours is held and delivered when they end. Both players' local times are shown in the app.
-- **Custom cards**: each player can write up to 5 of their own per season.
+- **Quiet hours**: a Nudge sent during quiet hours is held and delivered when they end. Both players' local times are shown in the app.
+- **Custom Nudges**: each player can write up to 5 of their own per season.
 
 ## Repo layout
 

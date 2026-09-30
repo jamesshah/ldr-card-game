@@ -37,7 +37,7 @@ async function dealHands(ctx: MutationCtx, couple: Doc<"couples">, playerB: Id<"
     .withIndex("by_couple_and_creator", (q) => q.eq("coupleId", undefined))
     .collect();
   if (catalog.length === 0) {
-    throw new ConvexError("The card deck hasn't been set up yet. Run the seed first.");
+    throw new ConvexError("The Nudge Deck hasn't been set up yet. Run the seed first.");
   }
   const [handA, handB] = dealDeck(catalog);
   const give = async (cards: Doc<"cards">[], ownerId: Id<"users">) => {
@@ -96,7 +96,7 @@ export const join = userMutation({
     await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
       userId: couple.playerA,
       title: `${ctx.user.name} joined!`,
-      body: "Your season has started. Your hand is ready.",
+      body: "Your season has started. Your Deck is ready — Nudge them.",
     });
     return null;
   },
@@ -110,7 +110,7 @@ export const cancelInvite = userMutation({
     if (!coupleId) return null;
     const couple = await ctx.db.get("couples", coupleId);
     if (couple && couple.status !== "waiting") {
-      throw new ConvexError("You can only cancel an invite your partner hasn't accepted.");
+      throw new ConvexError("You can only cancel an invite your person hasn't accepted.");
     }
     const customCards = await ctx.db
       .query("cards")
@@ -139,8 +139,8 @@ export const endSeason = internalMutation({
       if (!userId) continue;
       await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
         userId,
-        title: "Your season is over",
-        body: "Open the app to see your recap.",
+        title: "That's a wrap!",
+        body: "Open Nudge Deck for your season recap.",
       });
     }
     return null;

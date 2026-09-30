@@ -6,7 +6,7 @@ enum HandDisplayMode: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
     var symbol: String { self == .cards ? "rectangle.stack.fill" : "list.bullet" }
-    var label: String { self == .cards ? "Cards" : "List" }
+    var label: String { self == .cards ? "Nudges" : "List" }
 }
 
 struct HandView: View {
@@ -69,15 +69,15 @@ struct HandView: View {
 
                 if cards.isEmpty {
                     ContentUnavailableView(
-                        "Your hand is empty",
+                        "No Nudges yet.",
                         systemImage: "rectangle.stack.badge.minus",
-                        description: Text("You've played every card you had. Write a custom card, or wait for your partner to refuse one so you can steal from them.")
+                        description: Text("Fix that. 👀 Write a custom one, or wait for \(store.partnerName) to pass so you can steal from their Deck.")
                     )
                 } else if filteredCards.isEmpty {
                     ContentUnavailableView(
-                        "No \(activeCategory) cards",
+                        "No \(activeCategory) Nudges",
                         systemImage: "line.3.horizontal.decrease.circle",
-                        description: Text("Choose All or another category to see the rest of your hand.")
+                        description: Text("Pick All or another category to see the rest of your Deck.")
                     )
                 } else {
                     if displayMode == .cards {
@@ -90,13 +90,13 @@ struct HandView: View {
             }
             .padding(.vertical, 12)
             .background(Theme.canvas)
-            .navigationTitle("Your hand")
+            .navigationTitle("Your Deck")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingCustomCard = true
                     } label: {
-                        Label("Write a custom card", systemImage: "square.and.pencil")
+                        Label("Write a custom Nudge", systemImage: "square.and.pencil")
                     }
                     .disabled(store.hand.customCardsLeftToWrite < 1 || store.couple?.status != .active)
                 }
@@ -181,7 +181,7 @@ struct HandView: View {
                 .padding(.vertical, 7)
                 .calmSurface(radius: 10)
             }
-            .accessibilityLabel("Card category: \(activeCategory)")
+            .accessibilityLabel("Nudge category: \(activeCategory)")
         }
     }
 
@@ -214,7 +214,7 @@ struct HandView: View {
                         CardFace(card: card, compact: true)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityHint(card.kind == .action ? "Opens the play sheet" : "Opens this counter card")
+                    .accessibilityHint(card.kind == .action ? "Opens the send sheet" : "Opens this counter Nudge")
                 }
             }
             .padding(.horizontal, 20)
@@ -229,13 +229,13 @@ struct HandView: View {
     private var actionArea: some View {
         VStack(spacing: 8) {
             if let index = filteredCards.firstIndex(where: { $0.id == selectedCard?.id }) {
-                Text("Card \(index + 1) of \(filteredCards.count) · \(Int(store.hand.partnerCardsLeft)) left in \(store.partnerName)'s hand")
+                Text("Nudge \(index + 1) of \(filteredCards.count) · \(Int(store.hand.partnerCardsLeft)) left in \(store.partnerName)'s Deck")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             if let card = selectedCard {
                 if card.kind == .counter {
-                    Text("Save counters for when a card is played on you. Use them from your Inbox.")
+                    Text("Save counters for when they Nudge you. Use them from your Inbox.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -244,7 +244,7 @@ struct HandView: View {
                     Button {
                         cardToPlay = card
                     } label: {
-                        Label("Play on \(store.partnerName)", systemImage: "paperplane.fill")
+                        Label("Nudge \(store.partnerName)", systemImage: "paperplane.fill")
                             .frame(maxWidth: .infinity)
                             .foregroundStyle(.white)
                     }
@@ -285,7 +285,7 @@ struct PlayCardSheet: View {
                     CardFace(card: card, compact: true)
 
                     if waitingOnPartner {
-                        Label("\(store.partnerName) still has to answer your last card. You can play again once they respond.", systemImage: "hourglass")
+                        Label("Your Nudge is waiting… 👀 \(store.partnerName) still needs to respond before you send another.", systemImage: "hourglass")
                             .font(.subheadline)
                             .foregroundStyle(Theme.warning)
                     }
@@ -294,7 +294,7 @@ struct PlayCardSheet: View {
                        let quiet = partner.quietHours,
                        quiet.contains(date: Date(), utcOffsetMinutes: partner.utcOffsetMinutes) {
                         Label(
-                            "\(partner.name) is in quiet hours. This card will arrive at \(GameFormatting.timeOfDay(minutes: quiet.endMinutes)) their time.",
+                            "\(partner.name) is in quiet hours. This Nudge arrives at \(GameFormatting.timeOfDay(minutes: quiet.endMinutes)) their time.",
                             systemImage: "moon.zzz.fill"
                         )
                         .font(.subheadline)
@@ -305,7 +305,7 @@ struct PlayCardSheet: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Stack it (optional)")
                                 .font(.headline)
-                            Text("Put this on top of a card \(store.partnerName) played on you. Both cards stay in play.")
+                            Text("Put this on top of a Nudge \(store.partnerName) sent you. Both stay in play.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             Picker("Stack on", selection: $stackOnId) {
@@ -321,14 +321,14 @@ struct PlayCardSheet: View {
                 .padding(20)
             }
             .background(Theme.canvas)
-            .navigationTitle("Play this card?")
+            .navigationTitle("Send this Nudge?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Play") {
+                    Button("Send") {
                         Task {
                             let stackOn = stackable.first { $0.id == stackOnId }
                             if await store.play(card, stackedOn: stackOn) { dismiss() }
@@ -354,14 +354,14 @@ struct CustomCardSheet: View {
             Form {
                 Section {
                     TextField("Title, e.g. \"Say our inside joke\"", text: $title)
-                    TextField("What your partner has to do", text: $bodyText, axis: .vertical)
+                    TextField("What should they do?", text: $bodyText, axis: .vertical)
                         .lineLimit(3...6)
                 } footer: {
-                    Text("\(Int(store.hand.customCardsLeftToWrite)) custom cards left to write this season.")
+                    Text("\(Int(store.hand.customCardsLeftToWrite)) custom Nudges left to write this season.")
                 }
                 Section("Preview") {
                     CardFace(
-                        title: trimmedTitle.isEmpty ? "Your card" : trimmedTitle,
+                        title: trimmedTitle.isEmpty ? "Your Nudge" : trimmedTitle,
                         bodyText: bodyText,
                         category: "Custom",
                         kind: .action,
@@ -373,7 +373,7 @@ struct CustomCardSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.canvas)
-            .navigationTitle("Custom card")
+            .navigationTitle("Custom Nudge")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

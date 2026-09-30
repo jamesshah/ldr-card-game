@@ -21,7 +21,7 @@ struct RootView: View {
         Group {
             switch session.state {
             case .loading:
-                ProgressView("Loading your deck…")
+                ProgressView("Cooking up a Nudge…")
             case .signedOut:
                 SignInView()
             case .signedIn(let token, _):
@@ -45,7 +45,7 @@ struct SignedInView: View {
     var body: some View {
         Group {
             if !store.coupleLoaded {
-                ProgressView("Finding your partner…")
+                ProgressView("Finding a good one…")
             } else if let couple = store.couple {
                 if couple.status == .waiting {
                     WaitingForPartnerView(couple: couple)
