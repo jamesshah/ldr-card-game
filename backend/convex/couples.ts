@@ -147,6 +147,46 @@ export const endSeason = internalMutation({
   },
 });
 
+/** Ends an active season (if needed) and clears both players' pairing so they can start fresh. */
+export const endAndUnpair = userMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const coupleId = ctx.user.coupleId;
+    if (!coupleId) throw new ConvexError("You're not paired with a partner.");
+    const couple = await ctx.db.get("couples", coupleId);
+    if (!couple) {
+      await ctx.db.patch("users", ctx.user._id, { coupleId: undefined });
+      return null;
+    }
+    if (couple.status === "waiting") {
+      throw new ConvexError("Cancel the invite instead of ending the season.");
+    }
+
+    const wasActive = couple.status === "active";
+    if (wasActive) {
+      await ctx.db.patch("couples", coupleId, { status: "ended", endsAt: Date.now() });
+    }
+
+    for (const userId of [couple.playerA, couple.playerB]) {
+      if (!userId) continue;
+      await ctx.db.patch("users", userId, { coupleId: undefined });
+    }
+
+    const partnerId = couple.playerA === ctx.user._id ? couple.playerB : couple.playerA;
+    if (partnerId) {
+      await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
+        userId: partnerId,
+        title: wasActive ? "Season ended" : "Unpaired",
+        body: wasActive
+          ? `${ctx.user.name} ended the season and unpaired.`
+          : `${ctx.user.name} unpaired. You can start a new season anytime.`,
+      });
+    }
+    return null;
+  },
+});
+
 export const current = userQuery({
   args: {},
   returns: v.union(
