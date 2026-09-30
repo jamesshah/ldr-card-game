@@ -54,30 +54,18 @@ struct SignInView: View {
 
     private var hero: some View {
         VStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Theme.brandTint)
-                    .frame(width: 92, height: 124)
-                    .rotationEffect(.degrees(-10))
-                    .offset(x: -22)
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Theme.brand)
-                    .frame(width: 92, height: 124)
-                    .rotationEffect(.degrees(8))
-                    .offset(x: 22)
-                    .overlay(
-                        Image(systemName: "heart.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.white)
-                            .offset(x: 22)
-                    )
-            }
-            .padding(.vertical, 8)
-            .accessibilityHidden(true)
+            Image("BrandIcon")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 112, height: 112)
+                .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+                .shadow(color: .black.opacity(0.14), radius: 14, y: 8)
+                .accessibilityHidden(true)
 
             Text("Nudge Deck")
                 .font(.system(.largeTitle, design: .rounded).weight(.heavy))
-            Text("A card game for couples who live apart. Play a card on your partner any time. They do what it says, send proof, or pay the price.")
+            Text("Little things. More together.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

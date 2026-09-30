@@ -162,7 +162,7 @@ describe("rules", () => {
     const [base] = await incoming(t, bob);
 
     await expect(play(t, alice, await actionCard(t, alice), base!._id)).rejects.toThrow(
-      /only stack on a card your partner played on you/,
+      /only stack on a Nudge your person sent you/,
     );
 
     await play(t, bob, await actionCard(t, bob), base!._id);
@@ -189,7 +189,7 @@ describe("rules", () => {
   test("counter cards knock a played card out of the game", async () => {
     const { t, alice, bob } = await setupCouple();
     await expect(play(t, alice, await counterCard(t, alice))).rejects.toThrow(
-      /Counter cards can only be used/,
+      /Counters can only be used/,
     );
 
     await play(t, alice, await actionCard(t, alice));
@@ -201,7 +201,7 @@ describe("rules", () => {
         handId: await actionCard(t, bob),
         targetPlayId: target!._id,
       }),
-    ).rejects.toThrow(/Only counter cards/);
+    ).rejects.toThrow(/Only counter Nudges/);
 
     const counterHandId = await counterCard(t, bob);
     await t.mutation(api.plays.counter, {
@@ -306,7 +306,7 @@ describe("rules", () => {
 
     await expect(
       t.mutation(api.plays.acceptProof, { sessionToken: bob, playId: p!._id }),
-    ).rejects.toThrow(/Only the person who played/);
+    ).rejects.toThrow(/Only the person who sent/);
 
     await t.mutation(api.plays.rejectProof, {
       sessionToken: alice,

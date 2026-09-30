@@ -84,16 +84,16 @@ export const createCustom = userMutation({
     const title = args.title.trim();
     const body = args.body.trim();
     if (title.length < 3 || title.length > 60) {
-      throw new ConvexError("Card titles need to be between 3 and 60 characters.");
+      throw new ConvexError("Nudge titles need to be between 3 and 60 characters.");
     }
-    if (body.length > 280) throw new ConvexError("Keep the card description under 280 characters.");
+    if (body.length > 280) throw new ConvexError("Keep the Nudge under 280 characters.");
 
     const written = await ctx.db
       .query("cards")
       .withIndex("by_couple_and_creator", (q) => q.eq("coupleId", couple._id).eq("createdBy", ctx.user._id))
       .collect();
     if (written.length >= MAX_CUSTOM_CARDS_PER_PLAYER) {
-      throw new ConvexError(`You can write up to ${MAX_CUSTOM_CARDS_PER_PLAYER} custom cards per season.`);
+      throw new ConvexError(`You can write up to ${MAX_CUSTOM_CARDS_PER_PLAYER} custom Nudges per season.`);
     }
 
     const cardId = await ctx.db.insert("cards", {

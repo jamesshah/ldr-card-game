@@ -69,7 +69,7 @@ extension CardFace {
         if let from = card.stolenFromName {
             footnote = "Stolen from \(from)"
         } else if card.isCustom {
-            footnote = "Your custom card"
+            footnote = "Your custom Nudge"
         }
         self.init(title: card.title, bodyText: card.body, category: card.category, kind: card.kind, footnote: footnote, compact: compact)
     }

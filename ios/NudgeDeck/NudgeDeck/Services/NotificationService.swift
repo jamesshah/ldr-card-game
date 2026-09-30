@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import UserNotifications
 
-/// Local-notification fallback: while the app is running, new cards and proofs seen on the
+/// Local-notification fallback: while the app is running, new Nudges and proofs seen on the
 /// realtime inbox subscription become banners. Skipped once APNs is registered, since the
 /// backend then sends real pushes.
 @MainActor
@@ -50,13 +50,17 @@ final class NotificationService {
                 Event(
                     key: "\(play.id):\(play.state.rawValue):\(play.proofRejectedNote ?? "")",
                     title: play.proofRejectedNote == nil
-                        ? (play.stackedOnPlayId == nil ? "\(play.fromName) played a card on you" : "\(play.fromName) stacked a card on you")
+                        ? "👀 You've been nudged."
                         : "\(play.fromName) wants another try",
-                    body: play.title
+                    body: play.proofRejectedNote == nil
+                        ? (play.stackedOnPlayId == nil
+                            ? "Your person sent you something."
+                            : "Someone stacked another Nudge on you.")
+                        : "Someone wants your attention."
                 )
             }
         let proofs = inbox.toReview.map { play in
-            Event(key: "\(play.id):proof", title: "\(play.toName) sent proof", body: play.title)
+            Event(key: "\(play.id):proof", title: "\(play.toName) sent proof", body: "A Nudge is waiting for your review.")
         }
         return incoming + proofs
     }

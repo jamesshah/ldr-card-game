@@ -27,7 +27,7 @@ final class TwoPlayerSmokeTests: XCTestCase {
         nameField.typeText("Alex\(suffix)")
         app.buttons["Start"].tap()
 
-        let create = app.buttons["Create invite code"]
+        let create = app.buttons["Create invite"]
         XCTAssertTrue(create.waitForExistence(timeout: 15), "Pairing screen didn't appear")
         create.tap()
 
@@ -39,14 +39,14 @@ final class TwoPlayerSmokeTests: XCTestCase {
         try partner.signIn(name: partnerName)
         try partner.mutation("couples:join", ["inviteCode": code])
 
-        let playButton = app.buttons["Play on \(partnerName)"]
-        XCTAssertTrue(playButton.waitForExistence(timeout: 20), "Hand wasn't dealt after partner joined")
+        let playButton = app.buttons["Nudge \(partnerName)"]
+        XCTAssertTrue(playButton.waitForExistence(timeout: 20), "Deck wasn't dealt after partner joined")
         dismissNotificationPrompt()
         snapshot("01-hand")
 
-        // A plays a card; B completes it with a text note; A sends it back once, then accepts.
+        // A sends a Nudge; B completes it with a text note; A sends it back once, then accepts.
         playButton.tap()
-        tapWhenReady(app.navigationBars.buttons["Play"])
+        tapWhenReady(app.navigationBars.buttons["Send"])
         let aPlay = try partner.waitForIncoming()
         try partner.mutation("plays:completeWithProof", [
             "playId": aPlay, "proofType": "text", "proofText": "Called you from the train!", "proofStorageId": NSNull(),
@@ -70,12 +70,12 @@ final class TwoPlayerSmokeTests: XCTestCase {
         Thread.sleep(forTimeInterval: 5) // let the "sent proof" banner clear before the screenshot
         snapshot("02-inbox-review")
         accept.tap()
-        XCTAssertTrue(app.staticTexts["Nothing waiting"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["No Nudges yet."].waitForExistence(timeout: 10))
 
-        // B plays a card on A; A completes it with a note in the proof sheet; B accepts.
+        // B Nudges A; A completes it with a note in the proof sheet; B accepts.
         let bFirst = try partner.playFirstActionCard()
         let complete = app.buttons["Complete"]
-        XCTAssertTrue(complete.waitForExistence(timeout: 15), "Partner's card didn't arrive")
+        XCTAssertTrue(complete.waitForExistence(timeout: 15), "Partner's Nudge didn't arrive")
         snapshot("03-inbox-incoming")
         complete.tap()
         app.segmentedControls.buttons["Note"].tap()
@@ -88,27 +88,27 @@ final class TwoPlayerSmokeTests: XCTestCase {
         try partner.mutation("plays:acceptProof", ["playId": bFirst])
         try partner.waitForState(playId: bFirst, state: "completed")
 
-        // B plays again; A refuses, so B steals one of A's cards.
+        // B plays again; A passes, so B steals one of A's Nudges.
         let handBefore = try partner.handCount()
         let bSecond = try partner.playFirstActionCard()
-        let refuse = app.buttons["Refuse"]
+        let refuse = app.buttons["Pass"]
         XCTAssertTrue(refuse.waitForExistence(timeout: 15))
         refuse.tap()
-        let confirmRefuse = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Refuse \"")).firstMatch
+        let confirmRefuse = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Pass \"")).firstMatch
         XCTAssertTrue(confirmRefuse.waitForExistence(timeout: 5))
         snapshot("04-refuse-confirm")
         confirmRefuse.tap()
         try partner.waitForState(playId: bSecond, state: "refused")
-        XCTAssertEqual(try partner.handCount(), handBefore, "Partner should have played one card and stolen one")
-        XCTAssertNotNil(try partner.stolenTitle(playId: bSecond), "Refusal didn't steal a card")
+        XCTAssertEqual(try partner.handCount(), handBefore, "Partner should have played one Nudge and stolen one")
+        XCTAssertNotNil(try partner.stolenTitle(playId: bSecond), "Pass didn't steal a Nudge")
 
-        // B plays again; A shuts it down with a counter card.
+        // B plays again; A blocks it with a counter.
         let bThird = try partner.playFirstActionCard()
         let counter = app.buttons["Counter"]
         XCTAssertTrue(counter.waitForExistence(timeout: 15))
         counter.tap()
         let counterCard = app.collectionViews.buttons.firstMatch
-        XCTAssertTrue(counterCard.waitForExistence(timeout: 5), "No counter cards to pick")
+        XCTAssertTrue(counterCard.waitForExistence(timeout: 5), "No counters to pick")
         counterCard.tap()
         try partner.waitForState(playId: bThird, state: "countered")
 

@@ -37,7 +37,7 @@ struct PairingView: View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Start a season", systemImage: "sparkles")
                 .font(.title3.weight(.bold))
-            Text("Pick how long your game runs. When it ends, you'll both get a recap. Nobody keeps score, but you'll know who won.")
+            Text("Pick how long you two want to play. Send little Nudges, respond, and Nudge back. When it ends, you'll get a recap of the season.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Picker("Timeframe", selection: $timeframeDays) {
@@ -49,7 +49,7 @@ struct PairingView: View {
             Button {
                 Task { await store.createCouple(timeframeDays: timeframeDays) }
             } label: {
-                Text("Create invite code").frame(maxWidth: .infinity)
+                Text("Create invite").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -63,7 +63,7 @@ struct PairingView: View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Join your partner", systemImage: "person.2.fill")
                 .font(.title3.weight(.bold))
-            Text("Got a 6-character code from your partner? Enter it here and your hands will be dealt.")
+            Text("Got a 6-character code from your person? Enter it here and you'll both get a Deck of Nudges.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             TextField("Invite code", text: $inviteCode)
@@ -113,7 +113,7 @@ struct WaitingForPartnerView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         HStack {
-                            ShareLink(item: "Play Nudge Deck with me! Join with code \(couple.inviteCode)") {
+                            ShareLink(item: "Nudge with me on Nudge Deck. Join with code \(couple.inviteCode)") {
                                 Label("Share", systemImage: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderedProminent)
@@ -141,10 +141,10 @@ struct WaitingForPartnerView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("While you wait")
                             .font(.headline)
-                        Text("Write up to \(Int(store.hand.customCardsLeftToWrite)) custom cards that only you two would understand. They'll be added to your hand.")
+                        Text("Write up to \(Int(store.hand.customCardsLeftToWrite)) custom Nudges only you two would get. They'll land in your Deck.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        Button("Write a custom card") { showingCustomCard = true }
+                        Button("Write a custom Nudge") { showingCustomCard = true }
                             .disabled(store.hand.customCardsLeftToWrite < 1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

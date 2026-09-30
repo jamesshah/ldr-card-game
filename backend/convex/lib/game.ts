@@ -34,13 +34,13 @@ async function requireUnusedHand(
 ): Promise<{ hand: Doc<"hands">; card: Doc<"cards"> }> {
   const hand = await ctx.db.get("hands", handId);
   if (!hand || hand.coupleId !== couple._id || hand.ownerId !== user._id) {
-    throw new ConvexError("That card isn't in your hand.");
+    throw new ConvexError("That Nudge isn't in your Deck.");
   }
   if (hand.usedAt !== undefined) {
-    throw new ConvexError("You've already used that card. Every card is single use.");
+    throw new ConvexError("You've already used that Nudge. Every one is single use.");
   }
   const card = await ctx.db.get("cards", hand.cardId);
-  if (!card) throw new ConvexError("That card no longer exists.");
+  if (!card) throw new ConvexError("That Nudge no longer exists.");
   return { hand, card };
 }
 
@@ -52,11 +52,11 @@ async function requirePlayOnMe(
 ): Promise<Doc<"plays">> {
   const play = await ctx.db.get("plays", playId);
   if (!play || play.coupleId !== couple._id || play.toId !== user._id) {
-    throw new ConvexError("That card wasn't played on you.");
+    throw new ConvexError("That Nudge wasn't sent to you.");
   }
-  if (!play.delivered) throw new ConvexError("That card hasn't been delivered yet.");
+  if (!play.delivered) throw new ConvexError("That Nudge hasn't been delivered yet.");
   if (play.state !== "pending") {
-    throw new ConvexError("That card has already been answered.");
+    throw new ConvexError("That Nudge has already been answered.");
   }
   return play;
 }
@@ -86,28 +86,28 @@ export async function playCard(
   const { hand, card } = await requireUnusedHand(ctx, user, couple, args.handId);
 
   if (card.kind === "counter") {
-    throw new ConvexError("Counter cards can only be used on a card played on you.");
+    throw new ConvexError("Counters can only be used on a Nudge sent to you.");
   }
 
   let stackedOn: Doc<"plays"> | null = null;
   if (args.stackedOnPlayId) {
     stackedOn = await ctx.db.get("plays", args.stackedOnPlayId);
     if (!stackedOn || stackedOn.coupleId !== couple._id || stackedOn.toId !== user._id) {
-      throw new ConvexError("You can only stack on a card your partner played on you.");
+      throw new ConvexError("You can only stack on a Nudge your person sent you.");
     }
     if (!stackedOn.delivered || (stackedOn.state !== "pending" && stackedOn.state !== "proofSubmitted")) {
-      throw new ConvexError("You can only stack on a card that's still in play.");
+      throw new ConvexError("You can only stack on a Nudge that's still in play.");
     }
   }
 
   if (await hasUnansweredPlay(ctx, couple._id, user._id)) {
     throw new ConvexError(
-      "Give your partner a chance to respond to your last card before playing another.",
+      "Your Nudge is waiting… 👀 Give them a chance to respond before sending another.",
     );
   }
 
   const partner = await ctx.db.get("users", partnerId);
-  if (!partner) throw new ConvexError("Your partner could not be found.");
+  if (!partner) throw new ConvexError("Your person could not be found.");
   const deliverAt = deliveryTime(now, partner);
   const delivered = deliverAt <= now;
 
@@ -136,16 +136,18 @@ export async function playCard(
 
 async function notifyPlayDelivered(
   ctx: MutationCtx,
-  fromName: string,
+  _fromName: string,
   toId: Id<"users">,
-  cardTitle: string,
+  _cardTitle: string,
   stacked: boolean,
 ): Promise<void> {
   await notify(
     ctx,
     toId,
-    stacked ? `${fromName} stacked a card on you` : `${fromName} played a card on you`,
-    cardTitle,
+    "👀 You've been nudged.",
+    stacked
+      ? "Someone stacked another Nudge on you."
+      : "Your person sent you something.",
   );
 }
 
@@ -176,7 +178,7 @@ export async function counterPlay(
   assertSeasonOpen(couple, now);
   const { hand, card } = await requireUnusedHand(ctx, user, couple, args.handId);
   if (card.kind !== "counter") {
-    throw new ConvexError("Only counter cards can knock a card out of the game.");
+    throw new ConvexError("Only counter Nudges can block one that's on you.");
   }
   const target = await requirePlayOnMe(ctx, user, couple, args.targetPlayId);
 
@@ -201,12 +203,11 @@ export async function counterPlay(
     respondedAt: now,
   });
 
-  const targetCard = await ctx.db.get("cards", target.cardId);
   await notify(
     ctx,
     partnerId,
-    `${user.name} shut down your card`,
-    `"${targetCard?.title ?? "Your card"}" was knocked out with ${card.title}.`,
+    `${user.name} blocked your Nudge`,
+    "We'll pretend that didn't happen.",
   );
   return counterId;
 }
@@ -244,17 +245,13 @@ export async function refusePlay(
     stolenHandId: stolen?._id,
   });
 
-  const [card, stolenCard] = await Promise.all([
-    ctx.db.get("cards", play.cardId),
-    stolen ? ctx.db.get("cards", stolen.cardId) : Promise.resolve(null),
-  ]);
   await notify(
     ctx,
     play.fromId,
-    `${user.name} refused "${card?.title ?? "your card"}"`,
-    stolenCard
-      ? `You stole "${stolenCard.title}" from their hand. Use it against them.`
-      : "Their hand was empty, so there was nothing to steal.",
+    `${user.name} passed`,
+    stolen
+      ? "You stole a Nudge from their Deck. Nudge them back?"
+      : "Their Deck was empty, so there was nothing to steal.",
   );
 }
 
@@ -283,8 +280,12 @@ export async function completeWithProof(
     proofRejectedNote: undefined,
     respondedAt: Date.now(),
   });
-  const card = await ctx.db.get("cards", play.cardId);
-  await notify(ctx, play.fromId, `${user.name} sent proof`, `"${card?.title ?? "Your card"}" is ready for your review.`);
+  await notify(
+    ctx,
+    play.fromId,
+    `${user.name} sent proof`,
+    "A Nudge is waiting for your review.",
+  );
 }
 
 async function requireProofToReview(
@@ -295,9 +296,9 @@ async function requireProofToReview(
   const { couple } = await requireCouple(ctx, user, { mustBeActive: false });
   const play = await ctx.db.get("plays", playId);
   if (!play || play.coupleId !== couple._id || play.fromId !== user._id) {
-    throw new ConvexError("Only the person who played this card can review the proof.");
+    throw new ConvexError("Only the person who sent this Nudge can review the proof.");
   }
-  if (play.state !== "proofSubmitted") throw new ConvexError("There's no proof waiting on this card.");
+  if (play.state !== "proofSubmitted") throw new ConvexError("There's no proof waiting on this Nudge.");
   return play;
 }
 
@@ -308,8 +309,7 @@ export async function acceptProof(
 ): Promise<void> {
   const play = await requireProofToReview(ctx, user, args.playId);
   await ctx.db.patch("plays", play._id, { state: "completed" });
-  const card = await ctx.db.get("cards", play.cardId);
-  await notify(ctx, play.toId, `${user.name} accepted your proof`, `"${card?.title ?? "Card"}" is complete.`);
+  await notify(ctx, play.toId, "Nudge complete 🫡", "Nice work, lover.");
 }
 
 export async function rejectProof(
@@ -327,6 +327,5 @@ export async function rejectProof(
     proofStorageId: undefined,
     proofRejectedNote: note.slice(0, 280),
   });
-  const card = await ctx.db.get("cards", play.cardId);
-  await notify(ctx, play.toId, `${user.name} wants another try`, `"${card?.title ?? "Card"}": ${note}`);
+  await notify(ctx, play.toId, `${user.name} wants another try`, "Someone wants your attention.");
 }

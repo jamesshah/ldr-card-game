@@ -18,9 +18,9 @@ struct InboxView: View {
             Group {
                 if isEmpty {
                     ContentUnavailableView(
-                        "Nothing waiting",
+                        "No Nudges yet.",
                         systemImage: "tray",
-                        description: Text("When \(store.partnerName) plays a card on you, it shows up here. Your move: go play one from your hand.")
+                        description: Text("Fix that. 👀 When \(store.partnerName) sends one, it lands here. Your move: Nudge them back from your Deck.")
                     )
                 } else {
                     list
@@ -34,16 +34,16 @@ struct InboxView: View {
                     .presentationDetents([.medium, .large])
             }
             .confirmationDialog(
-                "Refuse this card?",
+                "Not feeling it?",
                 isPresented: Binding(get: { refusing != nil }, set: { if !$0 { refusing = nil } }),
                 titleVisibility: .visible,
                 presenting: refusing
             ) { play in
-                Button("Refuse \"\(play.title)\"", role: .destructive) {
+                Button("Pass \"\(play.title)\"", role: .destructive) {
                     Task { await store.refuse(play) }
                 }
             } message: { _ in
-                Text("\(store.partnerName) gets to steal a card from your hand and use it against you.")
+                Text("We'll pretend that didn't happen. \(store.partnerName) gets one Nudge from your Deck to send back.")
             }
             .alert(
                 "Ask for another try",
@@ -58,7 +58,7 @@ struct InboxView: View {
                 }
                 Button("Cancel", role: .cancel) { rejectNote = "" }
             } message: { _ in
-                Text("The card goes back to \(store.partnerName) to try again.")
+                Text("The Nudge goes back to \(store.partnerName) to try again.")
             }
         }
     }
@@ -66,7 +66,7 @@ struct InboxView: View {
     private var list: some View {
         List {
             if !inbox.incoming.isEmpty {
-                Section("Played on you") {
+                Section("Nudges on you") {
                     ForEach(inbox.incoming) { play in
                         IncomingRow(
                             play: play,
@@ -113,12 +113,12 @@ struct InboxView: View {
                 }
             }
             if !inbox.waitingOnPartner.isEmpty {
-                Section("Waiting on \(store.partnerName)") {
+                Section("Your Nudge is waiting… 👀") {
                     ForEach(inbox.waitingOnPartner) { play in
                         VStack(alignment: .leading, spacing: 6) {
                             Text(play.title).font(.headline)
                             if play.delivered {
-                                Text("Delivered \(play.playedDate.formatted(.relative(presentation: .named)))")
+                                Text("Sent \(play.playedDate.formatted(.relative(presentation: .named)))")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             } else {
@@ -171,7 +171,7 @@ private struct IncomingRow: View {
                     .foregroundStyle(Theme.warning)
             }
             if play.state == .proofSubmitted {
-                Label("Proof sent. Waiting for \(partnerName) to accept.", systemImage: "paperplane.fill")
+                Label("Proof sent. Waiting for \(partnerName) — nice work, lover.", systemImage: "paperplane.fill")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
@@ -188,7 +188,7 @@ private struct IncomingRow: View {
                         .tint(Theme.secondaryText)
                         .disabled(!hasCounter)
                         Button(role: .destructive, action: onRefuse) {
-                            Label("Refuse", systemImage: "hand.raised.fill").frame(maxWidth: .infinity)
+                            Label("Pass", systemImage: "hand.raised.fill").frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
                         .tint(Theme.destructive)
@@ -216,11 +216,11 @@ struct CounterSheet: View {
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 } footer: {
-                    Text("A counter knocks this card out of the game for good. Your counter card is used up too.")
+                    Text("A counter knocks this Nudge out for good. Your counter is used up too.")
                 }
-                Section("Your counter cards") {
+                Section("Your counters") {
                     if store.hand.counterCards.isEmpty {
-                        Text("You don't have any counter cards left.")
+                        Text("You're out of counters.")
                             .foregroundStyle(.secondary)
                     }
                     ForEach(store.hand.counterCards) { card in
@@ -255,7 +255,7 @@ struct CounterSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.canvas)
-            .navigationTitle("Shut it down")
+            .navigationTitle("Block this Nudge")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

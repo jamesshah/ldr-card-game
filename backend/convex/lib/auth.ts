@@ -49,13 +49,13 @@ export async function requireCouple(
   user: Doc<"users">,
   opts: { mustBeActive: boolean },
 ): Promise<CoupleContext> {
-  if (!user.coupleId) throw new ConvexError("You're not paired with a partner yet.");
+  if (!user.coupleId) throw new ConvexError("You're not paired with anyone yet.");
   const couple = await ctx.db.get("couples", user.coupleId);
   if (!couple) throw new ConvexError("Your couple could not be found.");
   if (opts.mustBeActive && couple.status !== "active") {
     throw new ConvexError(
       couple.status === "waiting"
-        ? "Your partner hasn't joined yet. Share your invite code."
+        ? "Your person hasn't joined yet. Share your invite code."
         : "This season has ended.",
     );
   }
@@ -68,6 +68,6 @@ export async function requireActiveCouple(
   user: Doc<"users">,
 ): Promise<{ couple: Doc<"couples">; partnerId: Id<"users"> }> {
   const { couple, partnerId } = await requireCouple(ctx, user, { mustBeActive: true });
-  if (!partnerId) throw new ConvexError("Your partner hasn't joined yet.");
+  if (!partnerId) throw new ConvexError("Your person hasn't joined yet.");
   return { couple, partnerId };
 }

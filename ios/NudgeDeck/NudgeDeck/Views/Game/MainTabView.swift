@@ -6,7 +6,7 @@ struct MainTabView: View {
     var body: some View {
         TabView {
             HandView()
-                .tabItem { Label("Hand", systemImage: "rectangle.stack.fill") }
+                .tabItem { Label("Deck", systemImage: "rectangle.stack.fill") }
             InboxView()
                 .tabItem { Label("Inbox", systemImage: "tray.full.fill") }
                 .badge(store.inbox.needsAttentionCount)

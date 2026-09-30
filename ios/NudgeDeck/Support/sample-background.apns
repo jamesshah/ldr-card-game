@@ -2,8 +2,8 @@
   "Simulator Target Bundle": "com.jamesshah.nudgedeck",
   "aps": {
     "alert": {
-      "title": "Theo played a card on you",
-      "body": "Open Nudge Deck to see what they picked."
+      "title": "👀 You've been nudged.",
+      "body": "Your person sent you something."
     },
     "sound": "default",
     "badge": 1

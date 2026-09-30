@@ -49,7 +49,7 @@ struct SettingsView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(store.isWorking || quietSaved)
                 } footer: {
-                    Text("Cards \(store.partnerName) plays during your quiet hours are held and delivered when they end.")
+                    Text("Nudges \(store.partnerName) sends during quiet hours are held and delivered when they end.")
                 }
 
                 Section("Season") {
@@ -63,7 +63,7 @@ struct SettingsView: View {
                             LabeledContent("Partner", value: partner.name)
                         }
                     }
-                    Button("Write a custom card (\(Int(store.hand.customCardsLeftToWrite)) left)") {
+                    Button("Write a custom Nudge (\(Int(store.hand.customCardsLeftToWrite)) left)") {
                         showingCustomCard = true
                     }
                     .disabled(store.hand.customCardsLeftToWrite < 1 || store.couple?.status != .active)
