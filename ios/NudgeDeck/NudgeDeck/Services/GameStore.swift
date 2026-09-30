@@ -122,6 +122,11 @@ final class GameStore: ObservableObject {
         await run("couples:cancelInvite")
     }
 
+    @discardableResult
+    func endSeasonAndUnpair() async -> Bool {
+        await run("couples:endAndUnpair")
+    }
+
     // MARK: Cards
 
     @discardableResult

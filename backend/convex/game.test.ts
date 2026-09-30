@@ -383,6 +383,39 @@ describe("rules", () => {
     await expect(play(t, alice, handId)).rejects.toThrow(/season has ended/);
   });
 
+  test("either player can end the season early and unpair both", async () => {
+    const { t, alice, bob } = await setupCouple();
+    await t.mutation(api.couples.endAndUnpair, { sessionToken: alice });
+    expect(await t.query(api.couples.current, { sessionToken: alice })).toBeNull();
+    expect(await t.query(api.couples.current, { sessionToken: bob })).toBeNull();
+    expect((await t.query(api.users.me, { sessionToken: alice }))?.coupleId).toBeUndefined();
+    expect((await t.query(api.users.me, { sessionToken: bob }))?.coupleId).toBeUndefined();
+  });
+
+  test("players can unpair after a season has already ended", async () => {
+    const { t, alice, bob } = await setupCouple();
+    vi.advanceTimersByTime(30 * 24 * 60 * 60 * 1000);
+    await t.finishInProgressScheduledFunctions();
+    expect((await t.query(api.couples.current, { sessionToken: alice }))?.status).toBe("ended");
+    await t.mutation(api.couples.endAndUnpair, { sessionToken: bob });
+    expect(await t.query(api.couples.current, { sessionToken: alice })).toBeNull();
+    expect(await t.query(api.couples.current, { sessionToken: bob })).toBeNull();
+  });
+
+  test("ending and unpairing is rejected while waiting for a partner", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(internal.seed.run, {});
+    const alice = await t.mutation(api.auth.signInDev, {
+      name: "Alice",
+      timeZone: "UTC",
+      utcOffsetMinutes: 0,
+    });
+    await t.mutation(api.couples.create, { sessionToken: alice, timeframeDays: 7 });
+    await expect(
+      t.mutation(api.couples.endAndUnpair, { sessionToken: alice }),
+    ).rejects.toThrow(/Cancel the invite/);
+  });
+
   test("a new custom card is first without reshuffling the existing hand", async () => {
     const { t, alice } = await setupCouple();
     const before = (await hand(t, alice)).cards.map((card) => card.handId);
