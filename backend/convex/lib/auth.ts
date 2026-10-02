@@ -51,7 +51,9 @@ export async function requireCouple(
 ): Promise<CoupleContext> {
   if (!user.coupleId) throw new ConvexError("You're not paired with anyone yet.");
   const couple = await ctx.db.get("couples", user.coupleId);
-  if (!couple) throw new ConvexError("Your couple could not be found.");
+  if (!couple || couple.deletedAt !== undefined) {
+    throw new ConvexError("You're not paired with anyone yet.");
+  }
   if (opts.mustBeActive && couple.status !== "active") {
     throw new ConvexError(
       couple.status === "waiting"

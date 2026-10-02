@@ -4,6 +4,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { userMutation, userQuery } from "./lib/auth";
 import { dealDeck, makeInviteCode, normalizeInviteCode, TIMEFRAME_OPTIONS_DAYS } from "./lib/rules";
+import { cancelCoupleSeasonJobs, cancelJob } from "./lib/seasonJobs";
 import { playerView, recapPlayer } from "./lib/validators";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -26,7 +27,7 @@ async function uniqueInviteCode(ctx: QueryCtx): Promise<string> {
       .query("couples")
       .withIndex("by_inviteCode", (q) => q.eq("inviteCode", code))
       .first();
-    if (!clash) return code;
+    if (!clash || clash.deletedAt !== undefined) return code;
   }
   throw new ConvexError("Couldn't generate an invite code. Please try again.");
 }
@@ -77,7 +78,7 @@ export const join = userMutation({
       .query("couples")
       .withIndex("by_inviteCode", (q) => q.eq("inviteCode", normalizeInviteCode(inviteCode)))
       .first();
-    if (!couple || couple.status !== "waiting") {
+    if (!couple || couple.status !== "waiting" || couple.deletedAt !== undefined) {
       throw new ConvexError("That invite code doesn't match an open invite.");
     }
     if (couple.playerA === ctx.user._id) throw new ConvexError("You can't join your own invite.");
@@ -92,7 +93,10 @@ export const join = userMutation({
     });
     await ctx.db.patch("users", ctx.user._id, { coupleId: couple._id });
     await dealHands(ctx, couple, ctx.user._id, now);
-    await ctx.scheduler.runAt(endsAt, internal.couples.endSeason, { coupleId: couple._id });
+    const endSeasonJobId = await ctx.scheduler.runAt(endsAt, internal.couples.endSeason, {
+      coupleId: couple._id,
+    });
+    await ctx.db.patch("couples", couple._id, { endSeasonJobId });
     await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
       userId: couple.playerA,
       title: `${ctx.user.name} joined!`,
@@ -134,7 +138,20 @@ export const endSeason = internalMutation({
   handler: async (ctx, { coupleId }) => {
     const couple = await ctx.db.get("couples", coupleId);
     if (!couple || couple.status !== "active") return null;
-    await ctx.db.patch("couples", coupleId, { status: "ended" });
+    await ctx.db.patch("couples", coupleId, { status: "ended", endSeasonJobId: undefined });
+    // Cancel quiet-hours delivers scheduled after the season ended. Same-tick delivers
+    // (deliverAt <= endsAt) are left alone; deliverPlay allows those.
+    if (couple.endsAt !== undefined) {
+      const plays = await ctx.db
+        .query("plays")
+        .withIndex("by_couple", (q) => q.eq("coupleId", coupleId))
+        .collect();
+      for (const play of plays) {
+        if (play.delivered || !play.deliverJobId || play.deliverAt <= couple.endsAt) continue;
+        await cancelJob(ctx, play.deliverJobId);
+        await ctx.db.patch("plays", play._id, { deliverJobId: undefined });
+      }
+    }
     for (const userId of [couple.playerA, couple.playerB]) {
       if (!userId) continue;
       await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
@@ -147,8 +164,8 @@ export const endSeason = internalMutation({
   },
 });
 
-/** Ends an active season (if needed) and clears both players' pairing so they can start fresh. */
-export const endAndUnpair = userMutation({
+/** Ends an active season (if needed), soft-deletes the couple, and clears both players' pairing. */
+export const unpair = userMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
@@ -159,14 +176,21 @@ export const endAndUnpair = userMutation({
       await ctx.db.patch("users", ctx.user._id, { coupleId: undefined });
       return null;
     }
+    if (couple.deletedAt !== undefined) {
+      await ctx.db.patch("users", ctx.user._id, { coupleId: undefined });
+      return null;
+    }
     if (couple.status === "waiting") {
-      throw new ConvexError("Cancel the invite instead of ending the season.");
+      throw new ConvexError("Cancel the invite instead of unpairing.");
     }
 
+    const now = Date.now();
     const wasActive = couple.status === "active";
-    if (wasActive) {
-      await ctx.db.patch("couples", coupleId, { status: "ended", endsAt: Date.now() });
-    }
+    await cancelCoupleSeasonJobs(ctx, couple);
+    await ctx.db.patch("couples", coupleId, {
+      ...(wasActive ? { status: "ended" as const, endsAt: now } : {}),
+      deletedAt: now,
+    });
 
     for (const userId of [couple.playerA, couple.playerB]) {
       if (!userId) continue;
@@ -183,6 +207,64 @@ export const endAndUnpair = userMutation({
           : `${ctx.user.name} unpaired. You can start a new season anytime.`,
       });
     }
+    return null;
+  },
+});
+
+/** Starts a new active season with the same partner; archives the current couple as ended (not deleted). */
+export const startNewSeason = userMutation({
+  args: { timeframeDays: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { timeframeDays }) => {
+    if (!(TIMEFRAME_OPTIONS_DAYS as readonly number[]).includes(timeframeDays)) {
+      throw new ConvexError("Pick a timeframe of a week, a month, 3 months, or 6 months.");
+    }
+    const coupleId = ctx.user.coupleId;
+    if (!coupleId) throw new ConvexError("You're not paired with a partner.");
+    const old = await ctx.db.get("couples", coupleId);
+    if (!old || old.deletedAt !== undefined) {
+      throw new ConvexError("You're not paired with a partner.");
+    }
+    if (old.status === "waiting") {
+      throw new ConvexError("Your person hasn't joined yet.");
+    }
+    if (!old.playerB) {
+      throw new ConvexError("Your person hasn't joined yet.");
+    }
+
+    const now = Date.now();
+    await cancelCoupleSeasonJobs(ctx, old);
+    if (old.status === "active") {
+      await ctx.db.patch("couples", coupleId, { status: "ended", endsAt: now });
+    }
+
+    const endsAt = now + timeframeDays * DAY_MS;
+    const newCoupleId = await ctx.db.insert("couples", {
+      inviteCode: await uniqueInviteCode(ctx),
+      playerA: old.playerA,
+      playerB: old.playerB,
+      status: "active",
+      timeframeDays,
+      startedAt: now,
+      endsAt,
+    });
+    const newCouple = (await ctx.db.get("couples", newCoupleId))!;
+    await dealHands(ctx, newCouple, old.playerB, now);
+
+    for (const userId of [old.playerA, old.playerB]) {
+      await ctx.db.patch("users", userId, { coupleId: newCoupleId });
+    }
+    const endSeasonJobId = await ctx.scheduler.runAt(endsAt, internal.couples.endSeason, {
+      coupleId: newCoupleId,
+    });
+    await ctx.db.patch("couples", newCoupleId, { endSeasonJobId });
+
+    const partnerId = old.playerA === ctx.user._id ? old.playerB : old.playerA;
+    await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
+      userId: partnerId,
+      title: "New season!",
+      body: `${ctx.user.name} started a new season. Your Deck is ready — Nudge them.`,
+    });
     return null;
   },
 });
@@ -205,7 +287,7 @@ export const current = userQuery({
   handler: async (ctx) => {
     if (!ctx.user.coupleId) return null;
     const couple = await ctx.db.get("couples", ctx.user.coupleId);
-    if (!couple) return null;
+    if (!couple || couple.deletedAt !== undefined) return null;
     const partnerId = couple.playerA === ctx.user._id ? couple.playerB : couple.playerA;
     const partner = partnerId ? await ctx.db.get("users", partnerId) : null;
     return {
@@ -235,7 +317,7 @@ export const recap = userQuery({
   handler: async (ctx) => {
     if (!ctx.user.coupleId) return null;
     const couple = await ctx.db.get("couples", ctx.user.coupleId);
-    if (!couple || !couple.playerB) return null;
+    if (!couple || couple.deletedAt !== undefined || !couple.playerB) return null;
     const plays = await ctx.db
       .query("plays")
       .withIndex("by_couple", (q) => q.eq("coupleId", couple._id))

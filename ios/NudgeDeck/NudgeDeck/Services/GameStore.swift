@@ -123,8 +123,13 @@ final class GameStore: ObservableObject {
     }
 
     @discardableResult
-    func endSeasonAndUnpair() async -> Bool {
-        await run("couples:endAndUnpair")
+    func unpair() async -> Bool {
+        await run("couples:unpair")
+    }
+
+    @discardableResult
+    func startNewSeason(timeframeDays: Int) async -> Bool {
+        await run("couples:startNewSeason", ["timeframeDays": Double(timeframeDays)])
     }
 
     // MARK: Cards

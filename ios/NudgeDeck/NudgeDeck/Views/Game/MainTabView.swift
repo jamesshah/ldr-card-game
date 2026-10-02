@@ -1,21 +1,51 @@
 import SwiftUI
 
+private enum AppTab: Hashable {
+    case deck
+    case inbox
+    case timeline
+    case recap
+    case settings
+}
+
 struct MainTabView: View {
     @EnvironmentObject private var store: GameStore
+    @State private var selectedTab: AppTab = .deck
+
+    private var seasonEnded: Bool {
+        store.couple?.status == .ended
+    }
 
     var body: some View {
-        TabView {
-            HandView()
-                .tabItem { Label("Deck", systemImage: "rectangle.stack.fill") }
-            InboxView()
-                .tabItem { Label("Inbox", systemImage: "tray.full.fill") }
-                .badge(store.inbox.needsAttentionCount)
+        TabView(selection: $selectedTab) {
+            if !seasonEnded {
+                HandView()
+                    .tabItem { Label("Deck", systemImage: "rectangle.stack.fill") }
+                    .tag(AppTab.deck)
+                InboxView()
+                    .tabItem { Label("Inbox", systemImage: "tray.full.fill") }
+                    .badge(store.inbox.needsAttentionCount)
+                    .tag(AppTab.inbox)
+            }
             TimelineScreen()
                 .tabItem { Label("Timeline", systemImage: "clock.fill") }
+                .tag(AppTab.timeline)
             RecapView()
                 .tabItem { Label("Recap", systemImage: "trophy.fill") }
+                .tag(AppTab.recap)
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                .tag(AppTab.settings)
+        }
+        .onAppear(perform: syncSelectedTab)
+        .onChange(of: store.couple?.status) { _, _ in syncSelectedTab() }
+    }
+
+    private func syncSelectedTab() {
+        if seasonEnded {
+            if selectedTab == .deck || selectedTab == .inbox {
+                selectedTab = .recap
+            }
         }
     }
 }
@@ -46,8 +76,18 @@ struct SeasonHeader: View {
     MainTabView().previewEnvironment()
 }
 
+#Preview("Main tabs · Dark") {
+    MainTabView().previewEnvironment()
+        .preferredColorScheme(.dark)
+}
+
 #Preview("Main tabs · season over") {
     MainTabView().previewEnvironment(.previewEnded())
+}
+
+#Preview("Main tabs · season over · Dark") {
+    MainTabView().previewEnvironment(.previewEnded())
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Season header", traits: .sizeThatFitsLayout) {

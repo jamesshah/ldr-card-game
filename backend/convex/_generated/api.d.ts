@@ -17,6 +17,7 @@ import type * as lib_apnsConfig from "../lib/apnsConfig.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_game from "../lib/game.js";
 import type * as lib_rules from "../lib/rules.js";
+import type * as lib_seasonJobs from "../lib/seasonJobs.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as plays from "../plays.js";
 import type * as push from "../push.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/game": typeof lib_game;
   "lib/rules": typeof lib_rules;
+  "lib/seasonJobs": typeof lib_seasonJobs;
   "lib/validators": typeof lib_validators;
   plays: typeof plays;
   push: typeof push;

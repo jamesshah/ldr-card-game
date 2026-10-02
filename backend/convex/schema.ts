@@ -49,6 +49,8 @@ export default defineSchema({
     timeframeDays: v.number(),
     startedAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    endSeasonJobId: v.optional(v.id("_scheduled_functions")),
   }).index("by_inviteCode", ["inviteCode"]),
 
   cards: defineTable({
@@ -86,6 +88,7 @@ export default defineSchema({
     counteredByPlayId: v.optional(v.id("plays")),
     delivered: v.boolean(),
     deliverAt: v.number(),
+    deliverJobId: v.optional(v.id("_scheduled_functions")),
     playedAt: v.number(),
     respondedAt: v.optional(v.number()),
     proofType: v.optional(proofType),

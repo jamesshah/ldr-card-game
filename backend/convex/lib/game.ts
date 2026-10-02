@@ -129,7 +129,8 @@ export async function playCard(
   if (delivered) {
     await notifyPlayDelivered(ctx, user.name, partnerId, card.title, stackedOn !== null);
   } else {
-    await ctx.scheduler.runAt(deliverAt, internal.plays.deliver, { playId });
+    const deliverJobId = await ctx.scheduler.runAt(deliverAt, internal.plays.deliver, { playId });
+    await ctx.db.patch("plays", playId, { deliverJobId });
   }
   return playId;
 }
@@ -154,7 +155,21 @@ async function notifyPlayDelivered(
 export async function deliverPlay(ctx: MutationCtx, playId: Id<"plays">): Promise<void> {
   const play = await ctx.db.get("plays", playId);
   if (!play || play.delivered) return;
-  await ctx.db.patch("plays", playId, { delivered: true });
+  const couple = await ctx.db.get("couples", play.coupleId);
+  // Unpaired couples never deliver. After a season ends, only allow a delivery that
+  // was already due by endsAt (same-tick with endSeason); later quiet-hours holds stay dark.
+  if (
+    !couple ||
+    couple.deletedAt !== undefined ||
+    (couple.status !== "active" &&
+      (couple.endsAt === undefined || play.deliverAt > couple.endsAt))
+  ) {
+    if (play.deliverJobId) {
+      await ctx.db.patch("plays", playId, { deliverJobId: undefined });
+    }
+    return;
+  }
+  await ctx.db.patch("plays", playId, { delivered: true, deliverJobId: undefined });
   const [from, card] = await Promise.all([
     ctx.db.get("users", play.fromId),
     ctx.db.get("cards", play.cardId),

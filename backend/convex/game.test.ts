@@ -374,6 +374,114 @@ describe("rules", () => {
     ).rejects.toThrow(/hasn't been delivered/);
   });
 
+  test("unpair cancels endSeason and pending quiet-hours delivery jobs", async () => {
+    const { t, alice, bob } = await setupCouple({
+      bobOffset: -300,
+      bobTimeZone: "America/New_York",
+    });
+    await t.mutation(api.users.setQuietHours, {
+      sessionToken: bob,
+      startMinutes: 22 * 60,
+      endMinutes: 7 * 60,
+    });
+    vi.setSystemTime(new Date("2026-01-11T04:30:00Z"));
+    await play(t, alice, await actionCard(t, alice));
+    const [held] = await t.query(api.plays.timeline, { sessionToken: alice });
+    const coupleId = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
+    const before = await t.run(async (ctx) => {
+      const couple = await ctx.db.get("couples", coupleId);
+      const playRow = await ctx.db.get("plays", held!._id);
+      return {
+        endSeasonJobId: couple!.endSeasonJobId!,
+        deliverJobId: playRow!.deliverJobId!,
+      };
+    });
+    expect(before.endSeasonJobId).toBeDefined();
+    expect(before.deliverJobId).toBeDefined();
+
+    await t.mutation(api.couples.unpair, { sessionToken: alice });
+
+    const after = await t.run(async (ctx) => {
+      const couple = await ctx.db.get("couples", coupleId);
+      const playRow = await ctx.db.get("plays", held!._id);
+      const endJob = await ctx.db.system.get("_scheduled_functions", before.endSeasonJobId);
+      const deliverJob = await ctx.db.system.get("_scheduled_functions", before.deliverJobId);
+      return {
+        coupleEndJobId: couple?.endSeasonJobId,
+        playDeliverJobId: playRow?.deliverJobId,
+        playDelivered: playRow?.delivered,
+        endJobState: endJob?.state.kind,
+        deliverJobState: deliverJob?.state.kind,
+      };
+    });
+    expect(after.coupleEndJobId).toBeUndefined();
+    expect(after.playDeliverJobId).toBeUndefined();
+    expect(after.playDelivered).toBe(false);
+    expect(after.endJobState).toBe("canceled");
+    expect(after.deliverJobState).toBe("canceled");
+
+    vi.advanceTimersByTime(8 * 60 * 60 * 1000);
+    await t.finishInProgressScheduledFunctions();
+    const playRow = await t.run(async (ctx) => ctx.db.get("plays", held!._id));
+    expect(playRow?.delivered).toBe(false);
+  });
+
+  test("startNewSeason cancels the previous endSeason timer", async () => {
+    const { t, alice, bob } = await setupCouple();
+    const oldId = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
+    const oldJobId = await t.run(async (ctx) => (await ctx.db.get("couples", oldId))!.endSeasonJobId!);
+    expect(oldJobId).toBeDefined();
+
+    await t.mutation(api.couples.startNewSeason, { sessionToken: alice, timeframeDays: 180 });
+    const newId = (await t.query(api.couples.current, { sessionToken: bob }))!._id;
+    expect(newId).not.toBe(oldId);
+
+    const after = await t.run(async (ctx) => {
+      const old = await ctx.db.get("couples", oldId);
+      const neu = await ctx.db.get("couples", newId);
+      const oldJob = await ctx.db.system.get("_scheduled_functions", oldJobId);
+      return {
+        oldStatus: old?.status,
+        oldJobId: old?.endSeasonJobId,
+        oldJobState: oldJob?.state.kind,
+        newJobId: neu?.endSeasonJobId,
+        newStatus: neu?.status,
+      };
+    });
+    expect(after.oldStatus).toBe("ended");
+    expect(after.oldJobId).toBeUndefined();
+    expect(after.oldJobState).toBe("canceled");
+    expect(after.newJobId).toBeDefined();
+    expect(after.newStatus).toBe("active");
+    expect(after.newJobId).not.toBe(oldJobId);
+  });
+
+  test("plays held for quiet hours stay undelivered after the season ends", async () => {
+    const { t, alice, bob } = await setupCouple({
+      bobOffset: -300,
+      bobTimeZone: "America/New_York",
+    });
+    await t.mutation(api.users.setQuietHours, {
+      sessionToken: bob,
+      startMinutes: 22 * 60,
+      endMinutes: 7 * 60,
+    });
+    // Hold a Nudge, then end early via startNewSeason so deliver would be after the old season.
+    vi.setSystemTime(new Date("2026-01-11T04:30:00Z"));
+    await play(t, alice, await actionCard(t, alice));
+    const [held] = await t.query(api.plays.timeline, { sessionToken: alice });
+    const oldId = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
+
+    await t.mutation(api.couples.startNewSeason, { sessionToken: alice, timeframeDays: 7 });
+    expect((await t.query(api.couples.current, { sessionToken: alice }))?._id).not.toBe(oldId);
+
+    vi.advanceTimersByTime(8 * 60 * 60 * 1000);
+    await t.finishInProgressScheduledFunctions();
+    const playRow = await t.run(async (ctx) => ctx.db.get("plays", held!._id));
+    expect(playRow?.delivered).toBe(false);
+    expect(playRow?.coupleId).toBe(oldId);
+  });
+
   test("no cards can be played after the season ends", async () => {
     const { t, alice } = await setupCouple();
     const handId = await actionCard(t, alice);
@@ -383,26 +491,34 @@ describe("rules", () => {
     await expect(play(t, alice, handId)).rejects.toThrow(/season has ended/);
   });
 
-  test("either player can end the season early and unpair both", async () => {
+  test("either player can unpair during an active season", async () => {
     const { t, alice, bob } = await setupCouple();
-    await t.mutation(api.couples.endAndUnpair, { sessionToken: alice });
+    const before = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
+    await t.mutation(api.couples.unpair, { sessionToken: alice });
     expect(await t.query(api.couples.current, { sessionToken: alice })).toBeNull();
     expect(await t.query(api.couples.current, { sessionToken: bob })).toBeNull();
     expect((await t.query(api.users.me, { sessionToken: alice }))?.coupleId).toBeUndefined();
     expect((await t.query(api.users.me, { sessionToken: bob }))?.coupleId).toBeUndefined();
+    const archived = await t.run(async (ctx) => ctx.db.get("couples", before));
+    expect(archived?.status).toBe("ended");
+    expect(archived?.deletedAt).toBeDefined();
   });
 
   test("players can unpair after a season has already ended", async () => {
     const { t, alice, bob } = await setupCouple();
+    const coupleId = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
     vi.advanceTimersByTime(30 * 24 * 60 * 60 * 1000);
     await t.finishInProgressScheduledFunctions();
     expect((await t.query(api.couples.current, { sessionToken: alice }))?.status).toBe("ended");
-    await t.mutation(api.couples.endAndUnpair, { sessionToken: bob });
+    await t.mutation(api.couples.unpair, { sessionToken: bob });
     expect(await t.query(api.couples.current, { sessionToken: alice })).toBeNull();
     expect(await t.query(api.couples.current, { sessionToken: bob })).toBeNull();
+    const archived = await t.run(async (ctx) => ctx.db.get("couples", coupleId));
+    expect(archived?.status).toBe("ended");
+    expect(archived?.deletedAt).toBeDefined();
   });
 
-  test("ending and unpairing is rejected while waiting for a partner", async () => {
+  test("unpair is rejected while waiting for a partner", async () => {
     const t = convexTest(schema, modules);
     await t.mutation(internal.seed.run, {});
     const alice = await t.mutation(api.auth.signInDev, {
@@ -411,9 +527,51 @@ describe("rules", () => {
       utcOffsetMinutes: 0,
     });
     await t.mutation(api.couples.create, { sessionToken: alice, timeframeDays: 7 });
+    await expect(t.mutation(api.couples.unpair, { sessionToken: alice })).rejects.toThrow(/Cancel the invite/);
+  });
+
+  test("startNewSeason from an active season deals a fresh deck", async () => {
+    const { t, alice, bob } = await setupCouple();
+    const oldId = (await t.query(api.couples.current, { sessionToken: alice }))!._id;
+    const oldHand = (await hand(t, alice)).cards.map((c) => c.handId);
+    await t.mutation(api.couples.startNewSeason, { sessionToken: alice, timeframeDays: 7 });
+    const current = await t.query(api.couples.current, { sessionToken: alice });
+    expect(current?.status).toBe("active");
+    expect(current?.timeframeDays).toBe(7);
+    expect(current?._id).not.toBe(oldId);
+    expect((await t.query(api.couples.current, { sessionToken: bob }))!._id).toBe(current!._id);
+    const newHand = (await hand(t, alice)).cards.map((c) => c.handId);
+    expect(newHand).not.toEqual(oldHand);
+    await play(t, alice, await actionCard(t, alice));
+    const old = await t.run(async (ctx) => ctx.db.get("couples", oldId));
+    expect(old?.status).toBe("ended");
+    expect(old?.deletedAt).toBeUndefined();
+  });
+
+  test("startNewSeason after natural end starts a new active season", async () => {
+    const { t, alice, bob } = await setupCouple();
+    vi.advanceTimersByTime(30 * 24 * 60 * 60 * 1000);
+    await t.finishInProgressScheduledFunctions();
+    expect((await t.query(api.couples.current, { sessionToken: alice }))?.status).toBe("ended");
+    await t.mutation(api.couples.startNewSeason, { sessionToken: bob, timeframeDays: 90 });
+    expect((await t.query(api.couples.current, { sessionToken: alice }))?.status).toBe("active");
+    expect((await t.query(api.couples.current, { sessionToken: alice }))?.timeframeDays).toBe(90);
+    await play(t, bob, await actionCard(t, bob));
+  });
+
+  test("join rejects a soft-deleted invite", async () => {
+    const { t, alice, bob } = await setupCouple();
+    const inviteCode = (await t.query(api.couples.current, { sessionToken: alice }))!.inviteCode;
+    await t.mutation(api.couples.unpair, { sessionToken: alice });
+    const carol = await t.mutation(api.auth.signInDev, {
+      name: "Carol",
+      timeZone: "UTC",
+      utcOffsetMinutes: 0,
+    });
     await expect(
-      t.mutation(api.couples.endAndUnpair, { sessionToken: alice }),
-    ).rejects.toThrow(/Cancel the invite/);
+      t.mutation(api.couples.join, { sessionToken: carol, inviteCode }),
+    ).rejects.toThrow(/doesn't match an open invite/);
+    expect(await t.query(api.couples.current, { sessionToken: bob })).toBeNull();
   });
 
   test("a new custom card is first without reshuffling the existing hand", async () => {
