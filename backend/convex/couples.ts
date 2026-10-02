@@ -233,8 +233,9 @@ export const startNewSeason = userMutation({
     }
 
     const now = Date.now();
+    const endedActive = old.status === "active";
     await cancelCoupleSeasonJobs(ctx, old);
-    if (old.status === "active") {
+    if (endedActive) {
       await ctx.db.patch("couples", coupleId, { status: "ended", endsAt: now });
     }
 
@@ -262,8 +263,10 @@ export const startNewSeason = userMutation({
     const partnerId = old.playerA === ctx.user._id ? old.playerB : old.playerA;
     await ctx.scheduler.runAfter(0, internal.push.sendToUser, {
       userId: partnerId,
-      title: "New season!",
-      body: `${ctx.user.name} started a new season. Your Deck is ready — Nudge them.`,
+      title: endedActive ? "Season ended" : "New season!",
+      body: endedActive
+        ? `${ctx.user.name} ended the season and started a new one. Your Deck is ready — Nudge them.`
+        : `${ctx.user.name} started a new season. Your Deck is ready — Nudge them.`,
     });
     return null;
   },
