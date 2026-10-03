@@ -2,14 +2,16 @@ import Foundation
 import UIKit
 import UserNotifications
 
-/// Local-notification fallback: while the app is running, new Nudges and proofs seen on the
-/// realtime inbox subscription become banners. Skipped once APNs is registered, since the
-/// backend then sends real pushes.
+/// Local-notification fallback: while the app is running, inbox and season changes
+/// become banners. Skipped once APNs is fully ready, since the backend then sends real pushes.
 @MainActor
 final class NotificationService {
     static let shared = NotificationService()
 
     private var seenKeys: Set<String>?
+    /// Nil until the first `coupleDidUpdate` baseline is recorded.
+    private var previousCouple: Couple?
+    private var hasCoupleBaseline = false
 
     func requestAuthorization() async {
         let center = UNUserNotificationCenter.current()
@@ -33,8 +35,47 @@ final class NotificationService {
         }
     }
 
+    func coupleDidUpdate(_ couple: Couple?) {
+        defer {
+            previousCouple = couple
+            hasCoupleBaseline = true
+        }
+        // First snapshot after launch / sign-in is existing state, not news.
+        guard hasCoupleBaseline else { return }
+        guard !PushRegistration.shared.isRemotePushReady else { return }
+
+        if let prev = previousCouple, couple == nil {
+            post(
+                title: "Unpaired",
+                body: "You can start a new season anytime.",
+                id: "unpaired:\(prev.id)"
+            )
+            return
+        }
+
+        if let prev = previousCouple, let next = couple, prev.id != next.id, next.status == .active {
+            post(
+                title: "New season!",
+                body: "Your Deck is ready — Nudge them.",
+                id: "new-season:\(next.id)"
+            )
+            return
+        }
+
+        if let prev = previousCouple, prev.status == .active,
+           let next = couple, next.id == prev.id, next.status == .ended {
+            post(
+                title: "That's a wrap!",
+                body: "Open Nudge Deck for your season recap.",
+                id: "season-ended:\(next.id)"
+            )
+        }
+    }
+
     func reset() {
         seenKeys = nil
+        previousCouple = nil
+        hasCoupleBaseline = false
     }
 
     struct Event: Equatable {

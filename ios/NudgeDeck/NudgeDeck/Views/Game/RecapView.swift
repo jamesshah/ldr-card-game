@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RecapView: View {
     @EnvironmentObject private var store: GameStore
+    @State private var confirmingStartNewSeason = false
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,17 @@ struct RecapView: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
+                        if recap.status == .ended {
+                            Button("Start new season") {
+                                confirmingStartNewSeason = true
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            .padding(.top, 8)
+                            Text("To unpair, open Settings.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .padding(20)
                 } else {
@@ -32,6 +44,11 @@ struct RecapView: View {
             }
             .background(Theme.canvas)
             .navigationTitle(store.recap?.status == .ended ? "Season recap" : "Season so far")
+            .sheet(isPresented: $confirmingStartNewSeason) {
+                StartNewSeasonSheet(seasonAlreadyOver: true)
+                    .presentationDetents([.medium, .large])
+                    .environmentObject(store)
+            }
         }
     }
 

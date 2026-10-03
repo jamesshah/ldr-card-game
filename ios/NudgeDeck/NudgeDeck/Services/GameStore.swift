@@ -56,6 +56,7 @@ final class GameStore: ObservableObject {
         watch("couples:current", as: Couple?.self) { [weak self] value in
             self?.couple = value
             self?.coupleLoaded = true
+            NotificationService.shared.coupleDidUpdate(value)
         }
         watch("cards:myHand", as: Hand.self) { [weak self] in self?.hand = $0 }
         watch("plays:inbox", as: Inbox.self) { [weak self] value in
@@ -123,8 +124,13 @@ final class GameStore: ObservableObject {
     }
 
     @discardableResult
-    func endSeasonAndUnpair() async -> Bool {
-        await run("couples:endAndUnpair")
+    func unpair() async -> Bool {
+        await run("couples:unpair")
+    }
+
+    @discardableResult
+    func startNewSeason(timeframeDays: Int) async -> Bool {
+        await run("couples:startNewSeason", ["timeframeDays": Double(timeframeDays)])
     }
 
     // MARK: Cards

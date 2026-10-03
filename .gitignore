@@ -12,3 +12,7 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .swiftpm/
+
+# App Store screenshots / marketing exports (local tooling)
+app-store-screenshots/
+ios/NudgeDeck/marketing/
